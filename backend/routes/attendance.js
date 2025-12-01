@@ -14,7 +14,11 @@ router.post("/", auth, async (req, res) => {
     const { date, subject, entries } = req.body;
 
     if (!date || !subject || !Array.isArray(entries)) {
-      return res.status(400).json({ error: "Missing fields" });
+      return res.status(400).json({ error: "Missing date, subject or entries" });
+    }
+
+    if (!entries.length) {
+      return res.status(400).json({ error: "No attendance entries provided" });
     }
 
     const doc = await Attendance.create({
@@ -27,19 +31,19 @@ router.post("/", auth, async (req, res) => {
       })),
     });
 
-    res.status(201).json(doc);
+    return res.status(201).json(doc);
   } catch (err) {
     console.error("Attendance save error:", err);
-    res.status(500).json({ error: "Server error saving attendance" });
+    return res.status(500).json({ error: "Server error saving attendance" });
   }
 });
 
-// GET /api/attendance/me  → student: get own attendance records
+// GET /api/attendance/me  → student: get own attendance
 router.get("/me", auth, async (req, res) => {
   try {
     const email = req.user.email;
 
-    // Find all attendance docs where this student has an entry
+    // Find all documents where this student appears
     const docs = await Attendance.find({
       "entries.studentEmail": email,
     }).lean();
@@ -57,10 +61,10 @@ router.get("/me", auth, async (req, res) => {
       });
     });
 
-    res.json(flat); // [{ date, subject, present }, ...]
+    return res.json(flat); // [{ date, subject, present }, ...]
   } catch (err) {
     console.error("Attendance fetch error:", err);
-    res.status(500).json({ error: "Server error fetching attendance" });
+    return res.status(500).json({ error: "Server error fetching attendance" });
   }
 });
 

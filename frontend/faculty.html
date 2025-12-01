@@ -290,7 +290,9 @@
     return;
   }
 
-  const checkedStatuses = Array.from(document.querySelectorAll(".att-status:checked"));
+  const checkedStatuses = Array.from(
+    document.querySelectorAll(".att-status:checked")
+  );
   const entries = checkedStatuses.map((r) => ({
     email: r.dataset.email,
     present: r.value === "present",
@@ -312,7 +314,6 @@
     });
 
     const data = await res.json().catch(() => ({}));
-
     if (!res.ok) {
       alert("Error saving attendance: " + (data.error || res.status));
       return;

@@ -368,42 +368,77 @@
     return { total, present, absent };
   }
 
-  function initAttendance(auth) {
-    const email = auth.email;
-    const stats = getAttendanceStats(email);
-    const summaryEl = document.getElementById("attSummary");
+  async function initAttendance(auth) {
+  const summaryEl = document.getElementById("attSummary");
+  const canvas = document.getElementById("attendanceChart");
+  const ctx = canvas.getContext("2d");
 
-    if (!stats.total) {
-      summaryEl.innerHTML = `
-        <span class="text-secondary">No attendance data yet. Once faculty marks attendance, it will appear here.</span>
-      `;
-      const ctx = document.getElementById("attendanceChart").getContext("2d");
-      attendanceChart = new Chart(ctx, {
+  try {
+    const res = await fetch(API_BASE + "/attendance/me", {
+      headers: {
+        ...getAuthHeaders(),
+      },
+    });
+
+    const records = await res.json();
+
+    if (!res.ok) {
+      summaryEl.innerHTML =
+        '<span class="text-danger">Error loading attendance.</span>';
+      new Chart(ctx, {
         type: "pie",
         data: {
           labels: ["Present", "Absent"],
-          datasets: [{ data: [0, 1] }]
-        }
+          datasets: [{ data: [0, 1] }],
+        },
       });
       return;
     }
 
-    const percentage = ((stats.present / stats.total) * 100).toFixed(1);
+    if (!records.length) {
+      summaryEl.innerHTML =
+        '<span class="text-secondary">No attendance data yet. Once faculty marks attendance, it will appear here.</span>';
+      new Chart(ctx, {
+        type: "pie",
+        data: {
+          labels: ["Present", "Absent"],
+          datasets: [{ data: [0, 1] }],
+        },
+      });
+      return;
+    }
+
+    const total = records.length;
+    const present = records.filter((r) => r.present).length;
+    const absent = total - present;
+    const percentage = ((present / total) * 100).toFixed(1);
+
     summaryEl.innerHTML = `
-      <div>Total classes: <strong>${stats.total}</strong></div>
-      <div>Present: <strong>${stats.present}</strong> | Absent: <strong>${stats.absent}</strong></div>
+      <div>Total classes: <strong>${total}</strong></div>
+      <div>Present: <strong>${present}</strong> | Absent: <strong>${absent}</strong></div>
       <div>Attendance %: <strong>${percentage}%</strong></div>
     `;
 
-    const ctx = document.getElementById("attendanceChart").getContext("2d");
-    attendanceChart = new Chart(ctx, {
+    new Chart(ctx, {
       type: "pie",
       data: {
         labels: ["Present", "Absent"],
-        datasets: [{ data: [stats.present, stats.absent] }]
-      }
+        datasets: [{ data: [present, absent] }],
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    summaryEl.innerHTML =
+      '<span class="text-danger">Error: ' + err.message + "</span>";
+    new Chart(ctx, {
+      type: "pie",
+      data: {
+        labels: ["Present", "Absent"],
+        datasets: [{ data: [0, 1] }],
+      },
     });
   }
+}
 
   // ------- Marks from faculty -------
   async function initMarks(auth) {
