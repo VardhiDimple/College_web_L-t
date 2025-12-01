@@ -1,5 +1,5 @@
 // ==== API base (use only if you wired backend) ====
-const API_BASE = "http://localhost:4000/api"; // or leave as-is if not using
+const API_BASE = "https://college-web-l-t.onrender.com"; // or leave as-is if not using
 
 // ==== Auth + known users ====
 const STORAGE_AUTH_KEY = "portal_auth";
