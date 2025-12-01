@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Faculty Dashboard</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <style>
+    body {
+      background: radial-gradient(circle at top, #6366f1 0, #0f172a 50%, #020617 100%);
+      min-height: 100vh;
+      padding: 2rem 0;
+      color: #e5e7eb;
+    }
+    .dash-card {
+      background: rgba(15,23,42,0.9);
+      border-radius: 1rem;
+      box-shadow: 0 20px 30px rgba(0,0,0,0.4);
+      padding: 1.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .chat-floating {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 999px;
+      background: #38bdf8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      cursor: pointer;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="dash-card mb-4 d-flex justify-content-between align-items-center">
+    <div>
+      <h3 class="mb-1">Hello, <span id="facNameLabel">Faculty</span> 👩‍🏫</h3>
+      <div class="small text-secondary" id="facMeta">Department</div>
+    </div>
+    <div>
+      <button class="btn btn-outline-light btn-sm" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Project posting -->
+    <div class="col-lg-4">
+      <div class="dash-card">
+        <h5 class="mb-3">📌 Post Project</h5>
+        <div class="mb-2">
+          <label class="form-label small">Title</label>
+          <input id="projTitle" class="form-control form-control-sm">
+        </div>
+        <div class="mb-2">
+          <label class="form-label small">Subject Code</label>
+          <select id="projSubjectSelect" class="form-select form-select-sm mb-1">
+            <option value="">-- Select subject --</option>
+          </select>
+          <input id="projSubject" class="form-control form-control-sm" placeholder="Or manual: CSE999 - Custom">
+        </div>
+        <div class="mb-2">
+          <label class="form-label small">Deadline</label>
+          <input id="projDeadline" type="date" class="form-control form-control-sm">
+        </div>
+        <div class="mb-3">
+          <label class="form-label small">Description</label>
+          <textarea id="projDesc" rows="3" class="form-control form-control-sm"></textarea>
+        </div>
+        <button class="btn btn-success btn-sm" onclick="addProject()">Add Project</button>
+      </div>
+    </div>
+
+    <!-- Event / Timetable -->
+    <div class="col-lg-4">
+      <div class="dash-card">
+        <h5 class="mb-3">🗓️ Add Event / Timetable</h5>
+        <div class="mb-2">
+          <label class="form-label small">Event Title</label>
+          <input id="eventTitle" class="form-control form-control-sm">
+        </div>
+        <div class="mb-2">
+          <label class="form-label small">Date</label>
+          <input id="eventDate" type="date" class="form-control form-control-sm">
+        </div>
+        <div class="mb-2">
+          <label class="form-label small">Target Dept (optional)</label>
+          <input id="eventDept" class="form-control form-control-sm" placeholder="CSE / ALL">
+        </div>
+        <div class="mb-3">
+          <label class="form-label small">Details</label>
+          <textarea id="eventDesc" rows="3" class="form-control form-control-sm"></textarea>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="addEvent()">Add Event</button>
+      </div>
+    </div>
+
+    <!-- Attendance (separate, with Present/Absent) -->
+    <div class="col-lg-4">
+      <div class="dash-card">
+        <h5 class="mb-3">✅ Mark Attendance</h5>
+        <div class="mb-2">
+          <label class="form-label small">Date</label>
+          <input id="attDate" type="date" class="form-control form-control-sm" />
+        </div>
+        <div class="mb-2">
+          <label class="form-label small">Subject</label>
+          <select id="attSubjectSelect" class="form-select form-select-sm mb-1"></select>
+          <input id="attSubjectManual" class="form-control form-control-sm" placeholder="Or manual subject code">
+        </div>
+        <div class="small text-secondary mb-2">
+          Choose Present / Absent for each student.
+        </div>
+        <div class="table-responsive" style="max-height: 180px; overflow-y: auto;">
+          <table class="table table-sm table-dark mb-2">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="attTableBody"></tbody>
+          </table>
+        </div>
+        <button class="btn btn-outline-success btn-sm" onclick="saveAttendance()">Save Attendance</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Marks separate row -->
+  <div class="row">
+    <div class="col-lg-6">
+      <div class="dash-card">
+        <h5 class="mb-3">🧮 Enter Marks (Auto Grade + Edit)</h5>
+        <div class="mb-2 d-flex gap-2">
+          <div class="flex-grow-1">
+            <label class="form-label small">Subject</label>
+            <select id="markSubjectSelect" class="form-select form-select-sm mb-1"></select>
+            <input id="markSubjectManual" class="form-control form-control-sm" placeholder="Or manual subject code">
+          </div>
+          <div style="width: 110px;">
+            <label class="form-label small">Max Marks</label>
+            <input id="markMax" type="number" class="form-control form-control-sm" value="100" min="1">
+          </div>
+        </div>
+        <div class="mb-2 d-flex gap-2">
+          <button class="btn btn-outline-secondary btn-sm" onclick="loadMarksForSubject()">Load Saved Marks</button>
+          <button class="btn btn-outline-warning btn-sm" onclick="saveMarks()">Save Marks & Grades</button>
+        </div>
+        <div class="table-responsive" style="max-height: 220px; overflow-y: auto;">
+          <table class="table table-sm table-dark mb-2">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Marks</th>
+              </tr>
+            </thead>
+            <tbody id="marksTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="dash-card">
+        <h5 class="mb-3">Marks Status</h5>
+        <div id="marksSummary" class="small text-secondary">
+          No marks saved yet.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lists -->
+  <div class="row">
+    <div class="col-lg-6">
+      <div class="dash-card">
+        <h5 class="mb-3">Current Projects</h5>
+        <ul id="projList" class="list-group list-group-flush small"></ul>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="dash-card">
+        <h5 class="mb-3">Upcoming Events</h5>
+        <ul id="eventList" class="list-group list-group-flush small"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="chat-floating" onclick="openChat()" title="Open Chat">
+  💬
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+  const FAC_PROJECTS_KEY = "portal_student_projects"; // shared with student
+  const FAC_EVENTS_KEY = "portal_events";
+  const ATT_KEY = "portal_attendance";
+  const MARK_KEY = "portal_marks";
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const auth = requireAuth("faculty");
+    initFacultyInfo(auth);
+    populateSubjectDropdowns();
+    renderProjects();
+    renderEvents();
+    initAttendanceTable();
+    initMarksTable();
+  });
+
+  function logout() {
+    localStorage.removeItem(STORAGE_AUTH_KEY);
+    window.location.href = "index.html";
+  }
+
+  function initFacultyInfo(auth) {
+    document.getElementById("facNameLabel").textContent = auth.name || auth.email.split("@")[0];
+    document.getElementById("facMeta").textContent = "Your Department";
+  }
+
+  function populateSubjectDropdowns() {
+    const selects = [
+      document.getElementById("projSubjectSelect"),
+      document.getElementById("attSubjectSelect"),
+      document.getElementById("markSubjectSelect")
+    ];
+    selects.forEach(sel => {
+      sel.innerHTML = `<option value="">-- Select subject --</option>`;
+      SUBJECTS.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.code;
+        opt.textContent = `${s.code} - ${s.name}`;
+        sel.appendChild(opt);
+      });
+    });
+  }
+
+  // --------- Attendance (Present / Absent) ---------
+  function initAttendanceTable() {
+    const tbody = document.getElementById("attTableBody");
+    tbody.innerHTML = "";
+    const users = getKnownUsers().filter(u => u.role === "student");
+    if (!users.length) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="2" class="small text-secondary">No students logged in yet.</td>`;
+      tbody.appendChild(tr);
+      return;
+    }
+    users.forEach(u => {
+      const email = u.email;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${u.name || u.email}</td>
+        <td>
+          <div class="d-flex gap-2">
+            <div class="form-check form-check-inline">
+              <input class="form-check-input att-status" type="radio"
+                     name="att-${email}" data-email="${email}" value="present" checked>
+              <label class="form-check-label small">Present</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input att-status" type="radio"
+                     name="att-${email}" data-email="${email}" value="absent">
+              <label class="form-check-label small">Absent</label>
+            </div>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function saveAttendance() {
+  const date = document.getElementById("attDate").value;
+  const selectVal = document.getElementById("attSubjectSelect").value;
+  const manual = document.getElementById("attSubjectManual").value.trim();
+  const subject = manual || selectVal;
+
+  if (!date || !subject) {
+    alert("Please select date and subject for attendance.");
+    return;
+  }
+
+  const checkedStatuses = Array.from(document.querySelectorAll(".att-status:checked"));
+  const entries = checkedStatuses.map((r) => ({
+    email: r.dataset.email,
+    present: r.value === "present",
+  }));
+
+  if (!entries.length) {
+    alert("No students in attendance list.");
+    return;
+  }
+
+  try {
+    const res = await fetch(API_BASE + "/attendance", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify({ date, subject, entries }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      alert("Error saving attendance: " + (data.error || res.status));
+      return;
+    }
+
+    alert("Attendance saved to database.");
+  } catch (err) {
+    console.error(err);
+    alert("Network error saving attendance: " + err.message);
+  }
+}
+
+
+  // --------- Marks & Grades (with edit) ---------
+  function initMarksTable() {
+    const tbody = document.getElementById("marksTableBody");
+    tbody.innerHTML = "";
+    const users = getKnownUsers().filter(u => u.role === "student");
+    if (!users.length) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="2" class="small text-secondary">No students logged in yet.</td>`;
+      tbody.appendChild(tr);
+      return;
+    }
+    users.forEach(u => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${u.name || u.email}</td>
+        <td><input type="number" class="form-control form-control-sm mark-input" data-email="${u.email}" min="0"></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function getAllMarks() {
+    const raw = localStorage.getItem(MARK_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }
+
+  async function saveMarks() {
+  const selectVal = document.getElementById("markSubjectSelect").value;
+  const manual = document.getElementById("markSubjectManual").value.trim();
+  const subject = manual || selectVal;
+  const maxMarks = Number(document.getElementById("markMax").value) || 100;
+
+  if (!subject) {
+    alert("Please select or enter a subject for marks.");
+    return;
+  }
+
+  const inputs = Array.from(document.querySelectorAll(".mark-input"));
+  const entries = inputs
+    .map((inp) => {
+      const email = inp.dataset.email;
+      const marksVal = inp.value;
+      if (!marksVal) return null;
+      const marks = Number(marksVal);
+      if (isNaN(marks)) return null;
+      const grade = gradeFromMarks(marks, maxMarks);
+      return { email, marks, grade };
+    })
+    .filter((e) => e !== null);
+
+  if (!entries.length) {
+    alert("Please enter at least one marks value.");
+    return;
+  }
+
+  try {
+    const res = await fetch(API_BASE + "/marks", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify({ subject, maxMarks, entries }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert("Error saving marks: " + (data.error || res.status));
+      return;
+    }
+
+    document.getElementById("marksSummary").innerHTML = `
+      <div class="mb-1">Saved marks for subject: <strong>${subject}</strong></div>
+      <div class="small">
+        Marks for ${entries.length} students stored in database. Grades auto-calculated.
+      </div>
+    `;
+
+    alert("Marks & grades saved to database.");
+  } catch (err) {
+    console.error(err);
+    alert("Network error saving marks: " + err.message);
+  }
+}
+
+  async function loadMarksForSubject() {
+  const selectVal = document.getElementById("markSubjectSelect").value;
+  const manual = document.getElementById("markSubjectManual").value.trim();
+  const subject = manual || selectVal;
+
+  if (!subject) {
+    alert("Select or enter a subject to load marks.");
+    return;
+  }
+
+  try {
+    const res = await fetch(API_BASE + "/marks/subject/" + encodeURIComponent(subject), {
+      headers: {
+        ...getAuthHeaders(),
+      },
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      alert("Error fetching marks for subject.");
+      return;
+    }
+
+    if (!data) {
+      alert("No saved marks found for this subject.");
+      return;
+    }
+
+    document.getElementById("markMax").value = data.maxMarks || 100;
+
+    const inputs = Array.from(document.querySelectorAll(".mark-input"));
+    inputs.forEach((inp) => {
+      const email = inp.dataset.email;
+      const entry = (data.entries || []).find((e) => e.studentEmail === email);
+      inp.value = entry ? entry.marks : "";
+    });
+
+    document.getElementById("marksSummary").innerHTML = `
+      <div class="mb-1">Loaded saved marks for: <strong>${subject}</strong></div>
+      <div class="small text-secondary">You can edit the marks and click "Save Marks & Grades" to update in DB.</div>
+    `;
+  } catch (err) {
+    console.error(err);
+    alert("Network error loading marks: " + err.message);
+  }
+}
+
+
+  // --------- Projects ---------
+  function getProjects() {
+    const raw = localStorage.getItem(FAC_PROJECTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }
+  function saveProjects(list) {
+    localStorage.setItem(FAC_PROJECTS_KEY, JSON.stringify(list));
+  }
+
+  function addProject() {
+    const title = document.getElementById("projTitle").value.trim();
+    const selectVal = document.getElementById("projSubjectSelect").value;
+    const manual = document.getElementById("projSubject").value.trim();
+    const subject = manual || selectVal;
+    const deadline = document.getElementById("projDeadline").value;
+    const desc = document.getElementById("projDesc").value.trim();
+
+    if (!title || !subject || !deadline) {
+      alert("Please fill title, subject and deadline.");
+      return;
+    }
+    const list = getProjects();
+    list.push({ title, subject, deadline, desc });
+    saveProjects(list);
+    renderProjects();
+    document.getElementById("projTitle").value = "";
+    document.getElementById("projSubject").value = "";
+    document.getElementById("projSubjectSelect").value = "";
+    document.getElementById("projDeadline").value = "";
+    document.getElementById("projDesc").value = "";
+  }
+
+  function renderProjects() {
+    const ul = document.getElementById("projList");
+    ul.innerHTML = "";
+    const list = getProjects();
+    if (!list.length) {
+      ul.innerHTML = `<li class="list-group-item bg-transparent text-secondary">No projects yet.</li>`;
+      return;
+    }
+    list.forEach((p, idx) => {
+      const li = document.createElement("li");
+      li.className = "list-group-item bg-transparent text-light d-flex justify-content-between";
+      li.innerHTML = `
+        <div>
+          <div class="fw-semibold">${p.title}</div>
+          <div class="small text-secondary">${p.subject}</div>
+          <div class="small text-secondary">${p.desc}</div>
+        </div>
+        <div class="text-end">
+          <div class="small text-warning">Due: ${p.deadline}</div>
+          <button class="btn btn-xs btn-outline-danger btn-sm mt-1" onclick="deleteProject(${idx})">Remove</button>
+        </div>
+      `;
+      ul.appendChild(li);
+    });
+  }
+
+  function deleteProject(idx) {
+    const list = getProjects().filter((_, i) => i !== idx);
+    saveProjects(list);
+    renderProjects();
+  }
+
+  // --------- Events ---------
+  function getEvents() {
+    const raw = localStorage.getItem(FAC_EVENTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }
+  function saveEvents(list) {
+    localStorage.setItem(FAC_EVENTS_KEY, JSON.stringify(list));
+  }
+
+  function addEvent() {
+    const title = document.getElementById("eventTitle").value.trim();
+    const date = document.getElementById("eventDate").value;
+    const desc = document.getElementById("eventDesc").value.trim();
+    const dept = document.getElementById("eventDept").value.trim() || "ALL";
+
+    if (!title || !date) {
+      alert("Please fill title and date.");
+      return;
+    }
+    const list = getEvents();
+    list.push({ title, date, description: desc, targetDept: dept });
+    saveEvents(list);
+    renderEvents();
+    document.getElementById("eventTitle").value = "";
+    document.getElementById("eventDate").value = "";
+    document.getElementById("eventDesc").value = "";
+    document.getElementById("eventDept").value = "";
+  }
+
+  function renderEvents() {
+    const ul = document.getElementById("eventList");
+    ul.innerHTML = "";
+    const list = getEvents();
+    if (!list.length) {
+      ul.innerHTML = `<li class="list-group-item bg-transparent text-secondary">No events yet.</li>`;
+      return;
+    }
+    list.forEach((e, idx) => {
+      const li = document.createElement("li");
+      li.className = "list-group-item bg-transparent text-light d-flex justify-content-between";
+      li.innerHTML = `
+        <div>
+          <div class="fw-semibold">${e.title}</div>
+          <div class="small text-secondary">${e.description || ""}</div>
+        </div>
+        <div class="text-end small">
+          <div class="text-info">${e.date}</div>
+          <div class="text-secondary">${e.targetDept}</div>
+          <button class="btn btn-xs btn-outline-danger btn-sm mt-1" onclick="deleteEvent(${idx})">Remove</button>
+        </div>
+      `;
+      ul.appendChild(li);
+    });
+  }
+
+  function deleteEvent(idx) {
+    const list = getEvents().filter((_, i) => i !== idx);
+    saveEvents(list);
+    renderEvents();
+  }
+
+  function openChat() {
+    window.location.href = "chat.html";
+  }
+</script>
+</body>
+</html>

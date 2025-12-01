@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Portal Chat</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <style>
+    body {
+      background: #020617;
+      color: #e5e7eb;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-wrapper {
+      flex: 1;
+      max-width: 1000px;
+      margin: 1.5rem auto;
+      background: #020617;
+      border-radius: 1rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      overflow: hidden;
+      display: flex;
+    }
+    .chat-sidebar {
+      width: 280px;
+      background: #020617;
+      border-right: 1px solid #111827;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .chat-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: radial-gradient(circle at top, #1d4ed8 0, #020617 60%);
+    }
+    .chat-messages {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+    }
+    .chat-input {
+      padding: 0.75rem;
+      border-top: 1px solid #111827;
+      background: rgba(15,23,42,0.95);
+    }
+    .msg-bubble {
+      margin-bottom: 0.5rem;
+      max-width: 70%;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.75rem;
+      font-size: 0.9rem;
+    }
+    .msg-me {
+      background: #22c55e;
+      color: #022c22;
+      margin-left: auto;
+      border-bottom-right-radius: 0.2rem;
+    }
+    .msg-other {
+      background: #0f172a;
+      border-bottom-left-radius: 0.2rem;
+    }
+    .sidebar-section-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #9ca3af;
+      margin-top: 0.5rem;
+    }
+    .user-pill {
+      border-radius: 999px;
+      padding: 0.3rem 0.6rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      border: 1px solid #1f2937;
+      margin-bottom: 0.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .user-pill:hover {
+      background: #111827;
+    }
+    .user-pill.active {
+      background: #22c55e;
+      color: #022c22;
+      border-color: #22c55e;
+    }
+  </style>
+</head>
+<body>
+<div class="chat-wrapper">
+  <div class="chat-sidebar">
+    <h5 class="mb-2">💬 Portal Chat</h5>
+
+    <div class="small text-secondary mb-1">You</div>
+    <div class="small mb-2">
+      <div><span class="text-secondary">Name:</span> <span id="chatUser"></span></div>
+      <div><span class="text-secondary">Role:</span> <span id="chatRole"></span></div>
+    </div>
+
+    <div class="sidebar-section-title">Rooms</div>
+    <div class="list-group list-group-flush mb-1">
+      <button class="list-group-item list-group-item-action small active"
+              id="room-general" onclick="switchRoom('general')">
+        # General Students
+      </button>
+      <button class="list-group-item list-group-item-action small"
+              id="room-faculty" onclick="switchRoom('faculty')">
+        # Faculty–Student
+      </button>
+    </div>
+
+    <div class="sidebar-section-title">Students</div>
+    <div id="studentList"></div>
+
+    <div class="sidebar-section-title">Faculty</div>
+    <div id="facultyList"></div>
+
+    <button class="btn btn-outline-light btn-sm mt-3" onclick="goBack()">Back to Portal</button>
+  </div>
+
+  <div class="chat-main">
+    <div class="p-2 border-bottom border-dark">
+      <strong id="roomTitle"># General Students</strong>
+      <div id="roomSubtitle" class="small text-secondary"></div>
+    </div>
+    <div id="messages" class="chat-messages"></div>
+    <div class="chat-input">
+      <form class="d-flex gap-2" onsubmit="return sendMessage(event)">
+        <input id="msgInput" class="form-control form-control-sm" placeholder="Type a message..." autocomplete="off" />
+        <button class="btn btn-success btn-sm" type="submit">Send</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+  const CHAT_KEY = "portal_chat_messages";
+
+  let auth;
+  let currentMode = "room"; // "room" | "dm"
+  let currentRoom = "general";
+  let currentDM = null; // { email, name, role }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    auth = getAuth();
+    if (!auth) {
+      window.location.href = "index.html";
+      return;
+    }
+    document.getElementById("chatUser").textContent = auth.name || auth.email;
+    document.getElementById("chatRole").textContent = auth.role;
+
+    renderUserLists();
+    switchRoom("general");
+  });
+
+  function renderUserLists() {
+    const users = getKnownUsers();
+    const students = users.filter(u => u.role === "student" && u.email !== auth.email);
+    const faculty = users.filter(u => u.role === "faculty" && u.email !== auth.email);
+
+    const studentList = document.getElementById("studentList");
+    const facultyList = document.getElementById("facultyList");
+    studentList.innerHTML = "";
+    facultyList.innerHTML = "";
+
+    if (!students.length) {
+      studentList.innerHTML = `<div class="small text-secondary">No students yet.</div>`;
+    } else {
+      students.forEach(u => {
+        const div = document.createElement("div");
+        div.className = "user-pill";
+        div.dataset.email = u.email;
+        div.onclick = () => openDM(u);
+        div.innerHTML = `
+          <span>${u.name || u.email}</span>
+          <span class="text-secondary">@</span>
+        `;
+        studentList.appendChild(div);
+      });
+    }
+
+    if (!faculty.length) {
+      facultyList.innerHTML = `<div class="small text-secondary">No faculty yet.</div>`;
+    } else {
+      faculty.forEach(u => {
+        const div = document.createElement("div");
+        div.className = "user-pill";
+        div.dataset.email = u.email;
+        div.onclick = () => openDM(u);
+        div.innerHTML = `
+          <span>${u.name || u.email}</span>
+          <span class="text-secondary">👩‍🏫</span>
+        `;
+        facultyList.appendChild(div);
+      });
+    }
+  }
+
+  function dmKey(aEmail, bEmail) {
+    return [aEmail, bEmail].sort().join("|");
+  }
+
+  function getAllMessages() {
+    try {
+      const raw = localStorage.getItem(CHAT_KEY);
+      if (!raw) return { general: [], faculty: [], dms: {} };
+      const parsed = JSON.parse(raw);
+      if (!parsed.dms) parsed.dms = {};
+      if (!parsed.general) parsed.general = [];
+      if (!parsed.faculty) parsed.faculty = [];
+      return parsed;
+    } catch {
+      return { general: [], faculty: [], dms: {} };
+    }
+  }
+
+  function saveAllMessages(data) {
+    localStorage.setItem(CHAT_KEY, JSON.stringify(data));
+  }
+
+  function switchRoom(room) {
+    currentMode = "room";
+    currentRoom = room;
+    currentDM = null;
+
+    document.getElementById("roomTitle").textContent =
+      room === "general" ? "# General Students" : "# Faculty–Student";
+    document.getElementById("roomSubtitle").textContent = "";
+
+    document.getElementById("room-general").classList.toggle("active", room === "general");
+    document.getElementById("room-faculty").classList.toggle("active", room === "faculty");
+
+    // remove active from DMs
+    document.querySelectorAll(".user-pill").forEach(p => p.classList.remove("active"));
+
+    loadMessages();
+  }
+
+  function openDM(user) {
+    currentMode = "dm";
+    currentDM = user;
+    document.getElementById("roomTitle").textContent = `DM with ${user.name || user.email}`;
+    document.getElementById("roomSubtitle").textContent = `${user.role?.toUpperCase() || ""}`;
+
+    document.getElementById("room-general").classList.remove("active");
+    document.getElementById("room-faculty").classList.remove("active");
+
+    document.querySelectorAll(".user-pill").forEach(p => {
+      p.classList.toggle("active", p.dataset.email === user.email);
+    });
+
+    loadMessages();
+  }
+
+  function loadMessages() {
+    const box = document.getElementById("messages");
+    box.innerHTML = "";
+    const all = getAllMessages();
+
+    let list;
+    if (currentMode === "room") {
+      list = all[currentRoom] || [];
+    } else {
+      const key = dmKey(auth.email, currentDM.email);
+      const dms = all.dms || {};
+      list = dms[key] || [];
+    }
+
+    list.forEach(m => {
+      const div = document.createElement("div");
+      const mine = m.email === auth.email;
+      div.className = "msg-bubble " + (mine ? "msg-me" : "msg-other");
+      div.innerHTML = `
+        <div class="small fw-semibold">${m.name} <span class="text-secondary">· ${m.role}</span></div>
+        <div>${m.text}</div>
+        <div class="small text-secondary text-end">
+          ${new Date(m.time).toLocaleTimeString()}
+        </div>
+      `;
+      box.appendChild(div);
+    });
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function sendMessage(e) {
+    e.preventDefault();
+    const input = document.getElementById("msgInput");
+    const text = input.value.trim();
+    if (!text) return false;
+
+    const all = getAllMessages();
+    const baseMsg = {
+      text,
+      time: Date.now(),
+      email: auth.email,
+      name: auth.name || auth.email.split("@")[0],
+      role: auth.role
+    };
+
+    if (currentMode === "room") {
+      const arr = all[currentRoom] || [];
+      arr.push(baseMsg);
+      all[currentRoom] = arr;
+    } else {
+      if (!currentDM) return false;
+      const key = dmKey(auth.email, currentDM.email);
+      if (!all.dms) all.dms = {};
+      const arr = all.dms[key] || [];
+      arr.push({ ...baseMsg, to: currentDM.email });
+      all.dms[key] = arr;
+    }
+
+    saveAllMessages(all);
+    input.value = "";
+    loadMessages();
+    return false;
+  }
+
+  function goBack() {
+    if (!auth) {
+      window.location.href = "index.html";
+      return;
+    }
+    if (auth.role === "student") {
+      window.location.href = "student.html";
+    } else {
+      window.location.href = "faculty.html";
+    }
+  }
+</script>
+</body>
+</html>
