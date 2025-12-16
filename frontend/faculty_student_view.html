@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Faculty – Student Lookup</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <style>
+    body {
+      background: radial-gradient(circle at top, #0ea5e9 0, #1d4ed8 45%, #020617 100%);
+      min-height: 100vh;
+      color: #f9fafb;
+    }
+    .layout { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: 260px;
+      background: radial-gradient(circle at top left, #1d4ed8 0, #020617 55%);
+      padding: 1.5rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .side-title {
+      font-weight: 600;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .side-title span {
+      background: #38bdf8;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #020617;
+    }
+    .nav-link-side {
+      border-radius: 999px;
+      padding: 0.6rem 0.9rem;
+      margin-bottom: 0.25rem;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      color: #e5e7eb;
+      text-decoration: none;
+      background: transparent;
+      border: none;
+      width: 100%;
+      text-align: left;
+    }
+    .nav-link-side.active {
+      background: linear-gradient(to right, #38bdf8, #6366f1);
+      color: #0b1020;
+      font-weight: 600;
+    }
+    .nav-link-side:hover {
+      background: rgba(148,163,184,0.18);
+      text-decoration: none;
+      color: #f9fafb;
+    }
+    .side-footer { margin-top: auto; }
+
+    .main { flex: 1; padding: 1.8rem 2rem; }
+
+    .dash-card {
+      background: rgba(15,23,42,0.96);
+      border-radius: 1.2rem;
+      padding: 1.6rem 1.7rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid rgba(56,189,248,0.45);
+      box-shadow: 0 20px 35px rgba(15,23,42,0.8);
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div>
+      <div class="side-title mb-1">
+        <span>F</span> <div>Faculty Portal</div>
+      </div>
+      <div class="small text-muted">Manage classes, marks, projects & events.</div>
+    </div>
+
+    <nav>
+      <a href="faculty_dashboard.html" class="nav-link-side">🏠 Overview</a>
+      <a href="faculty_attendance.html" class="nav-link-side">📋 Attendance</a>
+      <a href="faculty_marks.html" class="nav-link-side">🧮 Marks & Grades</a>
+      <a href="faculty_events.html" class="nav-link-side">🗓 Events & Calendar</a>
+      <a href="faculty_projects.html" class="nav-link-side">📌 Projects</a>
+      <a href="faculty_feedback.html" class="nav-link-side">💬 Feedback</a>
+      <a href="faculty_student_view.html" class="nav-link-side active">🔍 Student Lookup</a>
+    </nav>
+
+    <div class="side-footer">
+      <button class="nav-link-side" onclick="openChat()">💬 Chat</button>
+      <button class="nav-link-side" onclick="logout()">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="dash-card mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <div class="small text-secondary">👤 Student Lookup</div>
+          <h4 class="mb-0">View Marks & Finance Summary</h4>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label small">Select Student</label>
+          <select id="studentSelect" class="form-select form-select-sm">
+            <option value="">-- Loading students... --</option>
+          </select>
+        </div>
+
+        <div class="col-md-5">
+          <label class="form-label small">Or search by Email</label>
+          <input id="studentEmailInput" type="email" class="form-control form-control-sm"
+                 placeholder="student@example.com" />
+        </div>
+
+        <div class="col-md-3 d-flex gap-2">
+          <button class="btn btn-primary btn-sm flex-fill" onclick="lookupByEmail()">Search</button>
+          <button class="btn btn-outline-light btn-sm flex-fill" onclick="clearStudentView()">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result card -->
+    <div class="dash-card" id="resultCard">
+      <div id="studentSummaryEmpty" class="small text-secondary">
+        No student selected yet. Choose a student from the dropdown or search by email.
+      </div>
+
+      <div id="studentSummaryContent" class="d-none">
+        <h5 class="mb-2" id="summaryName"></h5>
+        <div class="small text-secondary mb-3" id="summaryEmail"></div>
+
+        <div class="row">
+          <div class="col-lg-6 mb-3">
+            <h6 class="mb-2">Marks & Grades</h6>
+            <div class="table-responsive">
+              <table class="table table-sm table-dark align-middle mb-2">
+                <thead>
+                  <tr>
+                    <th>Subject</th>
+                    <th>Marks</th>
+                    <th>Max</th>
+                    <th>Grade</th>
+                  </tr>
+                </thead>
+                <tbody id="marksBody">
+                  <tr><td colspan="4" class="small text-secondary">No marks found.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="col-lg-6 mb-3">
+            <h6 class="mb-2">Finance Summary</h6>
+            <div class="table-responsive">
+              <table class="table table-sm table-dark align-middle mb-2">
+                <thead>
+                  <tr>
+                    <th>Term</th>
+                    <th>Fees</th>
+                    <th>Paid</th>
+                    <th>Due</th>
+                  </tr>
+                </thead>
+                <tbody id="financeBody">
+                  <tr><td colspan="4" class="small text-secondary">No finance records.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+  let allStudents = [];
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const auth = requireAuth("faculty");
+    if (!auth) return;
+
+    loadStudentDropdown();
+  });
+
+  function logout() {
+    localStorage.removeItem(STORAGE_AUTH_KEY);
+    window.location.href = "index.html";
+  }
+  function openChat() {
+    window.location.href = "chat.html";
+  }
+
+  async function loadStudentDropdown() {
+    const sel = document.getElementById("studentSelect");
+    sel.innerHTML = `<option value="">Loading students...</option>`;
+
+    try {
+      const res = await fetch(API_BASE + "/faculty/students", {
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
+      });
+
+      if (!res.ok) {
+        sel.innerHTML = `<option value="">Error loading students (${res.status})</option>`;
+        console.error("students list error:", res.status);
+        return;
+      }
+
+      allStudents = await res.json();
+      if (!allStudents.length) {
+        sel.innerHTML = `<option value="">No students found.</option>`;
+        return;
+      }
+
+      sel.innerHTML = `<option value="">-- Select student --</option>`;
+      allStudents.forEach((s) => {
+        const opt = document.createElement("option");
+        opt.value = s.email;
+        const labelName = s.name || s.email;
+        opt.textContent = `${labelName} (${s.email})`;
+        sel.appendChild(opt);
+      });
+
+      sel.addEventListener("change", () => {
+        const email = sel.value;
+        document.getElementById("studentEmailInput").value = email;
+        if (email) lookupStudent(email);
+        else clearStudentView();
+      });
+    } catch (err) {
+      console.error("students list network error:", err);
+      sel.innerHTML = `<option value="">Network error</option>`;
+    }
+  }
+
+  function lookupByEmail() {
+    const email = document.getElementById("studentEmailInput").value.trim();
+    if (!email) {
+      alert("Please enter a student email.");
+      return;
+    }
+    // if this email exists in dropdown, select it
+    const sel = document.getElementById("studentSelect");
+    const opt = Array.from(sel.options).find(o => o.value === email);
+    if (opt) sel.value = email;
+    lookupStudent(email);
+  }
+
+  async function lookupStudent(email) {
+    const empty = document.getElementById("studentSummaryEmpty");
+    const content = document.getElementById("studentSummaryContent");
+    empty.classList.remove("d-none");
+    empty.textContent = "Loading student details...";
+    content.classList.add("d-none");
+
+    try {
+      const res = await fetch(
+        API_BASE + "/faculty/student-summary?email=" + encodeURIComponent(email),
+        {
+          headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders(),
+          },
+        }
+      );
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        console.error("lookup error:", res.status, data);
+        empty.textContent =
+          "Lookup failed: " + (data.error || "status " + res.status);
+        return;
+      }
+
+      renderStudentSummary(data);
+    } catch (err) {
+      console.error("lookup network error:", err);
+      empty.textContent = "Network error while looking up student.";
+    }
+  }
+
+  function renderStudentSummary(data) {
+    const empty = document.getElementById("studentSummaryEmpty");
+    const content = document.getElementById("studentSummaryContent");
+    empty.classList.add("d-none");
+    content.classList.remove("d-none");
+
+    const stu = data.student || {};
+    document.getElementById("summaryName").textContent =
+      stu.name || "Student";
+    document.getElementById("summaryEmail").textContent = stu.email || "";
+
+    // Marks
+    const marksBody = document.getElementById("marksBody");
+    const marks = data.marks || [];
+    marksBody.innerHTML = "";
+    if (!marks.length) {
+      marksBody.innerHTML =
+        `<tr><td colspan="4" class="small text-secondary">No marks found.</td></tr>`;
+    } else {
+      marks.forEach((m) => {
+        const tr = document.createElement("tr");
+        const subjLabel = m.subject || m.subjectCode || "";
+        tr.innerHTML = `
+          <td>${subjLabel}</td>
+          <td>${m.marks}</td>
+          <td>${m.maxMarks}</td>
+          <td>${m.grade}</td>
+        `;
+        marksBody.appendChild(tr);
+      });
+    }
+
+    // Finance
+    const finBody = document.getElementById("financeBody");
+    const finance = data.finance || [];
+    finBody.innerHTML = "";
+    if (!finance.length) {
+      finBody.innerHTML =
+        `<tr><td colspan="4" class="small text-secondary">No finance records.</td></tr>`;
+    } else {
+      finance.forEach((f) => {
+        const due =
+          (f.totalFees || 0) - (f.paid || 0);
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${f.term || "-"}</td>
+          <td>₹${f.totalFees ?? 0}</td>
+          <td>₹${f.paid ?? 0}</td>
+          <td class="${due > 0 ? "text-danger" : "text-success"}">₹${due}</td>
+        `;
+        finBody.appendChild(tr);
+      });
+    }
+  }
+
+  function clearStudentView() {
+    document.getElementById("studentEmailInput").value = "";
+    document.getElementById("studentSelect").value = "";
+    document.getElementById("studentSummaryEmpty").classList.remove("d-none");
+    document.getElementById("studentSummaryEmpty").textContent =
+      "No student selected yet. Choose a student from the dropdown or search by email.";
+    document.getElementById("studentSummaryContent").classList.add("d-none");
+  }
+</script>
+</body>
+</html>

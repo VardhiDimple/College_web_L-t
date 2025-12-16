@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Student – Academic Calendar</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <style>
+    body {
+      background: radial-gradient(circle at top, #a855f7 0, #7c3aed 45%, #020617 100%);
+      min-height: 100vh;
+      color: #f9fafb;
+    }
+    .layout { display:flex; min-height:100vh; }
+    .sidebar {
+      width:260px;
+      background: radial-gradient(circle at top left, #4c1d95 0, #020617 55%);
+      padding:1.5rem 1.25rem;
+      display:flex; flex-direction:column; gap:1.25rem;
+    }
+    .side-title { font-weight:600; font-size:1.2rem; display:flex; gap:.5rem; align-items:center; }
+    .side-title span {
+      background:#f97316; width:34px; height:34px; border-radius:999px;
+      display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.9rem; color:#020617;
+    }
+    .nav-link-side {
+      border-radius:999px; padding:0.6rem 0.9rem; margin-bottom:0.25rem;
+      font-size:0.9rem; display:flex; align-items:center; gap:0.55rem;
+      color:#e5e7eb; background:transparent; border:none; text-decoration:none; width:100%; text-align:left;
+    }
+    .nav-link-side.active {
+      background: linear-gradient(to right, #f97316, #fb923c);
+      color:#0b1020; font-weight:600;
+    }
+    .nav-link-side:hover {
+      background:rgba(148,163,184,0.18); color:#f9fafb; text-decoration:none;
+    }
+    .side-footer{ margin-top:auto; }
+    .main { flex:1; padding:1.8rem 2rem; }
+    .dash-card {
+      background:rgba(15,23,42,0.96);
+      border-radius:1.2rem;
+      padding:1.6rem 1.7rem;
+      margin-bottom:1.5rem;
+      border:1px solid rgba(233,213,255,0.45);
+      box-shadow:0 20px 35px rgba(15,23,42,0.8);
+    }
+    .calendar-grid {
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap:0.25rem;
+      font-size:0.85rem;
+    }
+    .cal-header {
+      text-align:center;
+      font-weight:600;
+      color:#c4b5fd;
+      margin-bottom:0.5rem;
+    }
+    .cal-day {
+      min-height:60px;
+      border-radius:0.75rem;
+      padding:0.25rem 0.4rem;
+      background:rgba(15,23,42,0.9);
+      border:1px solid rgba(148,163,184,0.25);
+    }
+    .cal-day.today {
+      border-color:#f97316;
+      box-shadow:0 0 0 1px rgba(249,115,22,0.6);
+    }
+    .cal-day.has-event {
+      background:rgba(56,189,248,0.18);
+    }
+    .cal-date {
+      font-weight:600;
+      font-size:0.9rem;
+    }
+    .cal-tag {
+      display:block;
+      margin-top:0.2rem;
+      font-size:0.7rem;
+      border-radius:999px;
+      padding:0.05rem 0.4rem;
+      background:rgba(56,189,248,0.2);
+      color:#e0f2fe;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+  </style>
+</head>
+<body class="student-theme">
+<div class="layout">
+  <aside class="sidebar">
+    <div>
+      <div class="side-title mb-1">
+        <span>S</span> <div>Student Portal</div>
+      </div>
+      <div class="small text-muted">Academic calendar & events.</div>
+    </div>
+   
+
+    <nav>
+      <a href="student_dashboard.html" class="nav-link-side">🏠 Overview</a>
+      <a href="student_attendance.html" class="nav-link-side">📊 Attendance</a>
+      <a href="student_grades.html" class="nav-link-side">📚 Grades & CGPA</a>
+      <a href="student_finance.html" class="nav-link-side">💰 Finance</a>
+      <a href="student_calendar.html" class="nav-link-side active">🗓 Academic Calendar</a>
+      <a href="student_projects.html" class="nav-link-side">📌 Projects</a>
+      <a href="student_feedback.html" class="nav-link-side">💬 Faculty Feedback</a>
+      <a href="student_infra.html" class="nav-link-side">🏗 Infra Issues</a>
+    </nav>
+    <div class="side-footer">
+      <button class="nav-link-side" onclick="openChat()">💬 Chat</button>
+      <button class="nav-link-side" onclick="logout()">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="dash-card mb-4 d-flex justify-content-between align-items-center">
+      <div>
+        <h4 class="mb-1">Academic Calendar</h4>
+        <div class="small text-secondary">
+          See holidays, events and project deadlines mapped on a monthly calendar.
+        </div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button class="btn btn-sm btn-outline-light" onclick="prevMonth()">←</button>
+        <div id="monthLabel" class="fw-semibold"></div>
+        <button class="btn btn-sm btn-outline-light" onclick="nextMonth()">→</button>
+        <button class="btn btn-sm btn-outline-warning ms-2" onclick="window.print()">⬇ Download / Print</button>
+      </div>
+    </div>
+
+    <div class="dash-card mb-3">
+      <div class="calendar-grid mb-2" id="weekdayHeader">
+        <div class="cal-header">Sun</div>
+        <div class="cal-header">Mon</div>
+        <div class="cal-header">Tue</div>
+        <div class="cal-header">Wed</div>
+        <div class="cal-header">Thu</div>
+        <div class="cal-header">Fri</div>
+        <div class="cal-header">Sat</div>
+      </div>
+      <div class="calendar-grid" id="calendarBody"></div>
+    </div>
+
+    <div class="dash-card">
+      <h6 class="mb-2">Events & Deadlines (this month)</h6>
+      <ul id="eventList" class="list-group list-group-flush small"></ul>
+    </div>
+  </main>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+  const EVENTS_KEY = "portal_events";
+  const STUDENT_PROJECTS_KEY = "portal_student_projects";
+
+  let currentYear, currentMonth; // 0-based month
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const auth = requireAuth("student");
+    if (!auth) return;
+    const today = new Date();
+    currentYear = today.getFullYear();
+    currentMonth = today.getMonth();
+    renderCalendar();
+  });
+
+  function logout() {
+    localStorage.removeItem(STORAGE_AUTH_KEY);
+    window.location.href = "index.html";
+  }
+  function openChat() {
+    window.location.href = "chat.html";
+  }
+
+  function prevMonth() {
+    currentMonth--;
+    if (currentMonth < 0) {
+      currentMonth = 11;
+      currentYear--;
+    }
+    renderCalendar();
+  }
+
+  function nextMonth() {
+    currentMonth++;
+    if (currentMonth > 11) {
+      currentMonth = 0;
+      currentYear++;
+    }
+    renderCalendar();
+  }
+
+  function getEventsAndProjects() {
+    const eventsRaw = localStorage.getItem(EVENTS_KEY);
+    const projRaw   = localStorage.getItem(STUDENT_PROJECTS_KEY);
+    const events = eventsRaw ? JSON.parse(eventsRaw) : [];
+    const projs  = projRaw ? JSON.parse(projRaw) : [];
+    // Normalize to one list with date + label
+    const combined = [];
+    events.forEach(e => {
+      if (e.date) combined.push({
+        date: e.date,
+        label: "Event: " + e.title
+      });
+    });
+    projs.forEach(p => {
+      if (p.deadline) combined.push({
+        date: p.deadline,
+        label: "Project: " + p.title
+      });
+    });
+    return combined;
+  }
+
+  function renderCalendar() {
+    const monthLabel = document.getElementById("monthLabel");
+    const calBody = document.getElementById("calendarBody");
+    calBody.innerHTML = "";
+
+    const monthNames = [
+      "January","February","March","April","May","June",
+      "July","August","September","October","November","December"
+    ];
+    monthLabel.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+
+    const firstDay = new Date(currentYear, currentMonth, 1);
+    const startWeekday = firstDay.getDay(); // 0-6
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+    const today = new Date();
+    const todayStr = today.toISOString().slice(0,10);
+
+    const items = getEventsAndProjects();
+
+    // Blank cells before month start
+    for (let i = 0; i < startWeekday; i++) {
+      const div = document.createElement("div");
+      div.className = "cal-day";
+      calBody.appendChild(div);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateObj = new Date(currentYear, currentMonth, d);
+      const iso = dateObj.toISOString().slice(0,10);
+      const dayDiv = document.createElement("div");
+      dayDiv.className = "cal-day";
+
+      if (iso === todayStr) dayDiv.classList.add("today");
+
+      const dayItems = items.filter(it => it.date === iso);
+      if (dayItems.length) dayDiv.classList.add("has-event");
+
+      dayDiv.innerHTML = `<div class="cal-date">${d}</div>`;
+      dayItems.slice(0,2).forEach(it => {
+        const span = document.createElement("span");
+        span.className = "cal-tag";
+        span.textContent = it.label;
+        dayDiv.appendChild(span);
+      });
+      if (dayItems.length > 2) {
+        const more = document.createElement("span");
+        more.className = "cal-tag";
+        more.textContent = `+${dayItems.length - 2} more`;
+        dayDiv.appendChild(more);
+      }
+
+      calBody.appendChild(dayDiv);
+    }
+
+    renderMonthList(items);
+  }
+
+  function renderMonthList(items) {
+    const ul = document.getElementById("eventList");
+    ul.innerHTML = "";
+    if (!items.length) {
+      ul.innerHTML = `<li class="list-group-item bg-transparent text-secondary">
+        No events or deadlines found for this month.
+      </li>`;
+      return;
+    }
+    // sort by date
+    items.sort((a,b) => a.date.localeCompare(b.date));
+    items.forEach(it => {
+      const li = document.createElement("li");
+      li.className = "list-group-item bg-transparent text-light d-flex justify-content-between";
+      li.innerHTML = `
+        <span>${it.label}</span>
+        <span class="text-info">${it.date}</span>
+      `;
+      ul.appendChild(li);
+    });
+  }
+</script>
+</body>
+</html>

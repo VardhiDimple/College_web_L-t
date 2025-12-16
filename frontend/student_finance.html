@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Student – Finance</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <style>
+    body {
+      background: radial-gradient(circle at top, #a855f7 0, #7c3aed 45%, #020617 100%);
+      min-height: 100vh;
+      color: #f9fafb;
+    }
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 260px;
+      background: radial-gradient(circle at top left, #4c1d95 0, #020617 55%);
+      padding: 1.5rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .side-title {
+      font-weight: 600; font-size: 1.2rem;
+      display:flex; align-items:center; gap:.5rem;
+    }
+    .side-title span {
+      background: #f97316;
+      width: 34px; height: 34px; border-radius: 999px;
+      display:flex; align-items:center; justify-content:center;
+      font-weight:700; font-size:.9rem; color:#020617;
+    }
+    .nav-link-side {
+      border-radius: 999px;
+      padding: 0.6rem 0.9rem;
+      margin-bottom: 0.25rem;
+      font-size: 0.9rem;
+      display:flex; align-items:center; gap:0.55rem;
+      color:#e5e7eb; text-decoration:none;
+      background:transparent; border:none; width:100%; text-align:left;
+    }
+    .nav-link-side.active {
+      background: linear-gradient(to right, #f97316, #fb923c);
+      color:#0b1020; font-weight:600;
+    }
+    .nav-link-side:hover {
+      background: rgba(148,163,184,0.18);
+      color:#f9fafb; text-decoration:none;
+    }
+    .side-footer { margin-top:auto; }
+    .main { flex:1; padding:1.8rem 2rem; }
+    .dash-card {
+      background: rgba(15,23,42,0.96);
+      border-radius: 1.2rem;
+      padding: 1.6rem 1.7rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid rgba(233,213,255,0.45);
+      box-shadow: 0 20px 35px rgba(15,23,42,0.8);
+    }
+    .badge-soft {
+      background: rgba(34,197,94,0.15);
+      border-radius: 999px;
+      padding: 0.15rem 0.7rem;
+      font-size: 0.75rem;
+    }
+    .status-pill {
+      border-radius: 999px;
+      padding: 0.1rem 0.6rem;
+      font-size: 0.75rem;
+    }
+    .status-paid { background: rgba(34,197,94,0.16); color:#bbf7d0; }
+    .status-due { background: rgba(239,68,68,0.16); color:#fecaca; }
+  </style>
+</head>
+<body class="student-theme">
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div>
+      <div class="side-title mb-1">
+        <span>S</span> <div>Student Portal</div>
+      </div>
+      <div class="small text-muted">Fee details & payments.</div>
+    </div>
+
+
+    <nav>
+      <a href="student_dashboard.html" class="nav-link-side">🏠 Overview</a>
+      <a href="student_attendance.html" class="nav-link-side">📊 Attendance</a>
+      <a href="student_grades.html" class="nav-link-side">📚 Grades & CGPA</a>
+      <a href="student_finance.html" class="nav-link-side active">💰 Finance</a>
+      <a href="student_calendar.html" class="nav-link-side">🗓 Academic Calendar</a>
+      <a href="student_projects.html" class="nav-link-side">📌 Projects</a>
+      <a href="student_feedback.html" class="nav-link-side">💬 Faculty Feedback</a>
+      <a href="student_infra.html" class="nav-link-side">🏗 Infra Issues</a>
+    </nav>
+
+    <div class="side-footer">
+      <button class="nav-link-side" onclick="openChat()">💬 Chat</button>
+      <button class="nav-link-side" onclick="logout()">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="dash-card mb-4 d-flex justify-content-between align-items-center">
+      <div>
+        <h4 class="mb-1">Financial Record</h4>
+        <div class="small text-secondary">
+          View fee types set by faculty and record your payment mode & reference.
+        </div>
+      </div>
+      <div class="text-end">
+        <div class="small text-secondary">Total Due</div>
+        <div class="fs-3" id="totalDueLabel">₹0</div>
+      </div>
+    </div>
+
+    <div class="dash-card mb-3">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="mb-0">Fee Breakdown</h6>
+        <button class="btn btn-sm btn-outline-light" onclick="window.print()">🖨 Print</button>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm table-dark mb-0">
+          <thead>
+          <tr>
+            <th>Fee Type</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Payment Mode</th>
+            <th>Ref No</th>
+            <th>Date</th>
+            <th>Action</th>
+          </tr>
+          </thead>
+          <tbody id="feeTableBody"></tbody>
+        </table>
+      </div>
+      <div class="small text-secondary mt-2">
+        * Faculty defines fee type & amount (on faculty finance page). Here you only choose payment mode & mark as paid.
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Payment Modal -->
+<div id="payModal" class="modal-backdrop d-none">
+  <div class="modal-card">
+    <h5 class="mb-2">Update Payment</h5>
+    <p class="small text-secondary" id="payFeeTitle"></p>
+    <div class="mb-2">
+      <label class="form-label small">Payment Mode</label>
+      <select id="payMode" class="form-select form-select-sm">
+        <option value="UPI">UPI</option>
+        <option value="Card">Card</option>
+        <option value="Net Banking">Net Banking</option>
+        <option value="Cash">Cash</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div class="mb-2">
+      <label class="form-label small">Reference No</label>
+      <input id="payRef" class="form-control form-control-sm" />
+    </div>
+    <div class="mb-3">
+      <label class="form-label small">Payment Date</label>
+      <input id="payDate" type="date" class="form-control form-control-sm" />
+    </div>
+    <div class="form-check mb-3">
+      <input class="form-check-input" type="checkbox" id="payMarkPaid" checked />
+      <label class="form-check-label small" for="payMarkPaid">
+        Mark this fee as paid
+      </label>
+    </div>
+    <div class="d-flex justify-content-end gap-2">
+      <button class="btn btn-sm btn-outline-secondary" onclick="closePayModal()">Cancel</button>
+      <button class="btn btn-sm btn-success" onclick="savePayment()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+  const STUDENT_FINANCE_KEY = "portal_student_finance";   // per-student finance
+  const FEE_MASTER_KEY     = "portal_fee_master";        // fees defined by faculty (shared key)
+
+  let currentFeeIndex = null;
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const auth = requireAuth("student");
+    if (!auth) return;
+    initFinance();
+  });
+
+  function logout() {
+    localStorage.removeItem(STORAGE_AUTH_KEY);
+    window.location.href = "index.html";
+  }
+  function openChat() {
+    window.location.href = "chat.html";
+  }
+
+  function getFeeMaster() {
+    const raw = localStorage.getItem(FEE_MASTER_KEY);
+    if (raw) return JSON.parse(raw);
+    // demo seed – in real flow faculty_finance.html will write this
+    const demo = [
+      { type: "Tuition Fee – Sem 5", amount: 60000 },
+      { type: "Exam Fee – Sem 5", amount: 3000 },
+      { type: "Library Fee", amount: 1000 }
+    ];
+    localStorage.setItem(FEE_MASTER_KEY, JSON.stringify(demo));
+    return demo;
+  }
+
+  function getStudentFinance() {
+    const raw = localStorage.getItem(STUDENT_FINANCE_KEY);
+    if (raw) return JSON.parse(raw);
+    // build from master initially
+    const master = getFeeMaster();
+    const mapped = master.map(f => ({
+      type: f.type,
+      amount: f.amount,
+      isPaid: false,
+      mode: "",
+      ref: "",
+      date: ""
+    }));
+    localStorage.setItem(STUDENT_FINANCE_KEY, JSON.stringify(mapped));
+    return mapped;
+  }
+
+  function saveStudentFinance(list) {
+    localStorage.setItem(STUDENT_FINANCE_KEY, JSON.stringify(list));
+  }
+
+  function initFinance() {
+    const tbody = document.getElementById("feeTableBody");
+    tbody.innerHTML = "";
+
+    const list = getStudentFinance();
+    let totalDue = 0;
+
+    list.forEach((f, idx) => {
+      if (!f.isPaid) totalDue += f.amount || 0;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${f.type}</td>
+        <td>₹${f.amount}</td>
+        <td>
+          <span class="status-pill ${f.isPaid ? "status-paid" : "status-due"}">
+            ${f.isPaid ? "Paid" : "Due"}
+          </span>
+        </td>
+        <td>${f.mode || "-"}</td>
+        <td>${f.ref || "-"}</td>
+        <td>${f.date || "-"}</td>
+        <td>
+          <button class="btn btn-sm btn-outline-light" onclick="openPayModal(${idx})">
+            ${f.isPaid ? "Update" : "Pay"}
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById("totalDueLabel").textContent = "₹" + totalDue;
+  }
+
+  function openPayModal(index) {
+    currentFeeIndex = index;
+    const list = getStudentFinance();
+    const f = list[index];
+    document.getElementById("payFeeTitle").textContent = `${f.type} – ₹${f.amount}`;
+    document.getElementById("payMode").value = f.mode || "UPI";
+    document.getElementById("payRef").value = f.ref || "";
+    document.getElementById("payDate").value = f.date || "";
+    document.getElementById("payMarkPaid").checked = !!f.isPaid;
+    document.getElementById("payModal").classList.remove("d-none");
+  }
+
+  function closePayModal() {
+    document.getElementById("payModal").classList.add("d-none");
+    currentFeeIndex = null;
+  }
+
+  function savePayment() {
+    if (currentFeeIndex === null) return;
+    const list = getStudentFinance();
+    const f = list[currentFeeIndex];
+
+    f.mode = document.getElementById("payMode").value;
+    f.ref  = document.getElementById("payRef").value.trim();
+    f.date = document.getElementById("payDate").value;
+    f.isPaid = document.getElementById("payMarkPaid").checked;
+
+    saveStudentFinance(list);
+    closePayModal();
+    initFinance();
+    showToast("Payment details updated.");
+  }
+</script>
+</body>
+</html>

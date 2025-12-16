@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Student – CGPA Calculator</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+<div class="layout-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><div class="brand-logo-circle">S</div><span>Student Portal</span></div>
+    <div class="sidebar-nav">
+      <a href="student_dashboard.html" class="nav-link-pill"><span class="label">🏠 Overview</span></a>
+      <a href="student_attendance.html" class="nav-link-pill"><span class="label">📊 Attendance</span></a>
+      <a href="student_marks.html" class="nav-link-pill"><span class="label">🧮 Marks & Grades</span></a>
+      <a href="student_cgpa.html" class="nav-link-pill active"><span class="label">🎓 CGPA Calculator</span></a>
+      <button class="nav-link-pill mt-3" onclick="logout()"><span class="label">🚪 Logout</span></button>
+    </div>
+  </aside>
+  
+
+
+  <main class="main-pane">
+    <div class="main-header">
+      <div class="pill-tag mb-1">CGPA</div>
+      <div class="main-header-title">CGPA Calculator</div>
+    </div>
+
+    <section class="card-glass">
+      <button class="btn btn-primary-soft mb-3" onclick="addRow()">+ Add Subject</button>
+      <div class="table-responsive mb-3">
+        <table class="table table-sm table-dark align-middle">
+          <thead>
+            <tr>
+              <th>Course Code</th>
+              <th>Course Name</th>
+              <th>Credits</th>
+              <th>Grade</th>
+            </tr>
+          </thead>
+          <tbody id="cgpaTable"></tbody>
+        </table>
+      </div>
+      <h5 class="fw-bold">CGPA: <span id="cgpaValue">0.00</span></h5>
+      <div class="small text-muted">Saved locally on your device.</div>
+    </section>
+  </main>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+const KEY="portal_student_grades";
+document.addEventListener("DOMContentLoaded", init);
+function logout(){ localStorage.removeItem(STORAGE_AUTH_KEY); window.location.href="index.html"; }
+
+function getGrades(){
+  return JSON.parse(localStorage.getItem(KEY) || "[]");
+}
+function saveGrades(list){
+  localStorage.setItem(KEY, JSON.stringify(list));
+}
+
+function init(){
+  const tbody=document.getElementById("cgpaTable");
+  tbody.innerHTML="";
+  const grades=getGrades();
+  grades.forEach(g=>addRow(g));
+  updateCGPA();
+}
+
+function addRow(data={code:"",name:"",credits:3,grade:"A"}){
+  const tbody=document.getElementById("cgpaTable");
+  const tr=document.createElement("tr");
+  tr.innerHTML=`
+    <td><input class="form-control form-control-sm" value="${data.code}"></td>
+    <td><input class="form-control form-control-sm" value="${data.name}"></td>
+    <td><input class="form-control form-control-sm" value="${data.credits}"></td>
+    <td><input class="form-control form-control-sm" value="${data.grade}"></td>
+  `;
+  tbody.appendChild(tr);
+
+  tr.querySelectorAll("input").forEach(inp=>{
+    inp.addEventListener("input", persistAndUpdate);
+  });
+}
+function persistAndUpdate(){
+  const rows = Array.from(document.querySelectorAll("#cgpaTable tr"));
+  const list = rows.map(tr=>{
+    const x = tr.querySelectorAll("input");
+    return {
+      code:x[0].value,
+      name:x[1].value,
+      credits:Number(x[2].value)||0,
+      grade:x[3].value.toUpperCase()
+    };
+  });
+  saveGrades(list);
+  updateCGPA();
+}
+function updateCGPA(){
+  const rows = getGrades().map(g => ({ grade:g.grade, credits:g.credits }));
+  const cgpa = calculateCGPA(rows);
+  document.getElementById("cgpaValue").textContent = cgpa.toFixed(2);
+}
+</script>
+</body>
+</html>

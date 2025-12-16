@@ -1,24 +1,534 @@
-body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+/* === Global Theme: Purple Gradient + Glassmorphism === */
+
+:root {
+  --bg-gradient: radial-gradient(circle at top, #a855f7 0, #4c1d95 45%, #020617 100%);
+  --card-bg: rgba(15, 23, 42, 0.92);
+  --card-border: rgba(148, 163, 184, 0.45);
+  --text-main: #e5e7eb;
+  --text-muted: #9ca3af;
+  --accent: #a855f7;
+  --accent-soft: rgba(168, 85, 247, 0.25);
+  --danger: #f97373;
+  --success: #22c55e;
 }
 
-/* Generic modal overlay */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15,23,42,0.75);
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+  background: var(--bg-gradient);
+  color: var(--text-main);
+  min-height: 100vh;
+}
+
+/* Layout helpers */
+
+.page-wrap {
+  max-width: 1120px;
+  margin: 2.5rem auto;
+  padding: 0 1rem;
+}
+
+.card-glass {
+  background: var(--card-bg);
+  border-radius: 1.25rem;
+  padding: 1.75rem;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* Auth page */
+
+.auth-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 2rem;
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .auth-shell {
+    grid-template-columns: 1fr;
+  }
+}
+
+.brand-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(248, 250, 252, 0.08);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.brand-logo-circle {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: conic-gradient(from 180deg, #a855f7, #ec4899, #6366f1, #a855f7);
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 0.9rem;
+}
+
+.hero-title {
+  font-size: 2.4rem;
+  font-weight: 700;
+}
+
+.hero-sub {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+/* Role toggle */
+
+.role-toggle {
+  display: inline-flex;
+  padding: 0.25rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.5);
+}
+
+.role-pill {
+  padding: 0.3rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.role-pill.active {
+  background: var(--accent-soft);
+  color: #f9fafb;
+}
+
+/* Buttons */
+
+.btn-primary-soft {
+  background: linear-gradient(135deg, #a855f7, #6366f1);
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.4rem;
+  font-weight: 600;
+  color: white;
+  box-shadow: 0 18px 35px rgba(76, 29, 149, 0.8);
+}
+
+.btn-primary-soft:hover {
+  filter: brightness(1.05);
+}
+
+.btn-ghost {
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: transparent;
+  color: var(--text-main);
+  padding: 0.5rem 1.2rem;
+}
+
+.badge-soft {
+  display: inline-flex;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.6);
+}
+
+/* Sidebar layout for dashboards */
+
+.layout-shell {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+@media (max-width: 900px) {
+  .layout-shell {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sidebar {
+  padding: 1.8rem 1.4rem;
+  border-right: 1px solid rgba(15, 23, 42, 0.9);
+  background: radial-gradient(circle at top, #581c87 0, #020617 60%);
+}
+
+.sidebar-brand {
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 1.6rem;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.nav-link-pill {
+  border-radius: 0.75rem;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: 0.16s ease all;
+}
+
+.nav-link-pill span.label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nav-link-pill:hover,
+.nav-link-pill.active {
+  background: rgba(15, 23, 42, 0.95);
+  color: var(--text-main);
+  border: 1px solid var(--accent);
+}
+
+/* Dashboard main area */
+
+.main-pane {
+  padding: 1.8rem 1.6rem;
+}
+
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1.2rem;
+}
+
+.main-header-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.pill-tag {
+  font-size: 0.78rem;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.9);
+  color: var(--text-muted);
+}
+
+/* Avatar */
+
+.avatar-lg {
+  width: 60px;
+  height: 60px;
+  border-radius: 999px;
+  background: conic-gradient(from 180deg, #a855f7, #ec4899, #6366f1, #a855f7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #020617;
+}
+
+/* Grid */
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Attendance % display */
+
+.att-percent {
+  font-size: 2.4rem;
+  font-weight: 700;
+}
+
+.att-caption {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Table tweaks */
+
+.table-dark {
+  --bs-table-bg: rgba(15, 23, 42, 0.85);
+}
+
+/* Floating chat button */
+
+.chat-floating {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #a855f7, #6366f1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  cursor: pointer;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.65);
+}
+
+/* Simple modal */
+
+.modal-backdrop-lite {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+}
+
+.modal-card-lite {
+  background: var(--card-bg);
+  border-radius: 1rem;
+  padding: 1.4rem 1.6rem;
+  max-width: 420px;
+  width: 100%;
+  border: 1px solid var(--card-border);
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Toast notification */
+
+.toast-stack {
+  position: fixed;
+  right: 18px;
+  bottom: 90px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
   z-index: 50;
 }
 
-.modal-card {
-  background: #020617;
-  border-radius: 1rem;
-  padding: 1.5rem;
-  width: 100%;
-  max-width: 400px;
-  box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+.toast-msg {
+  background: rgba(15, 23, 42, 0.95);
+  border-radius: 999px;
+  padding: 0.55rem 1rem;
+  font-size: 0.85rem;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+}
+/* Make all main text light on purple background */
+body {
+  color: #f9fafb;
+}
+
+/* Left side heading + subtitle + bullets */
+.hero-title {
+  color: #ffffff;
+}
+
+.hero-sub {
   color: #e5e7eb;
+}
+
+.login-bullets,
+.login-bullets li {
+  color: #e5e7eb;
+}
+
+/* Labels, small text, and nav links */
+.form-label,
+.small,
+.text-muted,
+.nav-link,
+.badge-soft {
+  color: #f9fafb !important;
+}
+
+/* Role pills text */
+.role-pill {
+  color: #e5e7eb;
+}
+
+/* Active role pill clearer */
+.role-pill.active {
+  color: #ffffff;
+}
+
+/* Input text */
+.form-control {
+  color: #f9fafb;
+}
+
+/* Placeholder a bit lighter */
+.form-control::placeholder {
+  color: #9ca3af;
+}
+/* Student theme: purple/green */
+body.student-theme {
+  background: radial-gradient(circle at top, #6366f1 0, #4c1d95 40%, #020617 100%);
+  color: #f9fafb;
+}
+
+/* Faculty theme: blue/orange */
+body.faculty-theme {
+  background: radial-gradient(circle at top, #0ea5e9 0, #1d4ed8 40%, #020617 100%);
+  color: #f9fafb;
+}
+
+/* Common card style – slightly different border for faculty */
+body.student-theme .dash-card {
+  border: 1px solid rgba(129, 140, 248, 0.6);
+}
+
+body.faculty-theme .dash-card {
+  border: 1px solid rgba(56, 189, 248, 0.6);
+}
+
+/* Make date input visible on dark background */
+input[type="date"] {
+  color: #e5e7eb; /* light text */
+  background-color: rgba(15, 23, 42, 0.95);
+  border-color: rgba(148, 163, 184, 0.5);
+}
+
+/* So the calendar icon is also visible */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+/* Fix: make event & project text always visible (no more hover effect needed) */
+.event-item,
+.project-item,
+.list-group-item {
+  background: rgba(255, 255, 255, 0.05) !important; /* light glass */
+  color: #ffffff !important;                        /* always visible */
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* If hover effect is needed, make it brighter—not hide text */
+.event-item:hover,
+.project-item:hover,
+.list-group-item:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+}
+
+/* Fix small subtext also (date/department/details) */
+.event-item .small,
+.project-item .small,
+.list-group-item .small {
+  color: #cbd5e1 !important; /* light grey */
+}
+/* Fix dark mode list text (Events & Projects) */
+#eventList .list-group-item,
+#projectList .list-group-item {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Subtext (department, date, description) */
+#eventList .list-group-item .small,
+#projectList .list-group-item .small {
+  color: #d1d5db !important;
+}
+
+/* Hover effect (brighter, still readable) */
+#eventList .list-group-item:hover,
+#projectList .list-group-item:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+/* ===== GLOBAL READABILITY FIX ===== */
+
+/* 1) Make general text bright on dark background */
+body {
+  color: #f9fafb;
+}
+
+/* 2) Make labels, small text, nav links, table text readable */
+label,
+.small,
+.text-secondary,
+.text-muted,
+.nav-link,
+.nav-link-side,
+td,
+th,
+.fw-semibold {
+  color: #e5e7eb !important;  /* light gray/white */
+}
+
+/* 3) Override Bootstrap's dark gray text which is too dull on dark bg */
+.text-secondary {
+  color: #cbd5e1 !important;  /* softer light gray */
+}
+.text-muted {
+  color: #9ca3af !important;
+}
+
+/* 4) Inputs + selects + textareas: show typed text clearly */
+.form-control,
+.form-control:focus,
+.form-select,
+.form-select:focus,
+textarea,
+textarea:focus {
+  color: #f9fafb !important;                             /* bright text */
+  background-color: rgba(15, 23, 42, 0.95) !important;   /* dark glass */
+  border-color: rgba(148, 163, 184, 0.6) !important;
+}
+
+/* 5) Placeholder text also visible but softer */
+.form-control::placeholder,
+textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+/* 6) List items (Events / Projects) always visible */
+#eventList .list-group-item,
+#projectList .list-group-item {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Hover effect: slightly brighter, but text still white */
+#eventList .list-group-item:hover,
+#projectList .list-group-item:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+}
+
+/* Subtext inside events/projects (dates, dept, description) */
+#eventList .list-group-item .small,
+#projectList .list-group-item .small {
+  color: #d1d5db !important;
 }

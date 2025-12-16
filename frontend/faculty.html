@@ -342,11 +342,29 @@
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${u.name || u.email}</td>
-        <td><input type="number" class="form-control form-control-sm mark-input" data-email="${u.email}" min="0"></td>
+        <td>
+  <input
+    type="number"
+    class="form-control form-control-sm mark-input"
+    data-email="${u.email}"
+    min="0"
+    oninput="validateMarks(this)"
+  >
+</td>
+
       `;
       tbody.appendChild(tr);
     });
   }
+  function validateMarks(input) {
+  const value = Number(input.value);
+  if (value < 0) {
+    alert("Marks cannot be negative.");
+    input.value = "";
+    input.focus();
+  }
+}
+
 
   function getAllMarks() {
     const raw = localStorage.getItem(MARK_KEY);

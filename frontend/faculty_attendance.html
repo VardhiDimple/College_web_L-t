@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Faculty – Attendance</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <style>
+    body {
+      background: radial-gradient(circle at top, #0ea5e9 0, #1d4ed8 45%, #020617 100%);
+      min-height: 100vh;
+      color: #f9fafb;
+    }
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 260px;
+      background: radial-gradient(circle at top left, #1d4ed8 0, #020617 55%);
+      padding: 1.5rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .side-title {
+      font-weight: 600;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .side-title span {
+      background: #38bdf8;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #020617;
+    }
+    .nav-link-side {
+      border-radius: 999px;
+      padding: 0.6rem 0.9rem;
+      margin-bottom: 0.25rem;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      color: #e5e7eb;
+      text-decoration: none;
+      background: transparent;
+      border: none;
+      width: 100%;
+      text-align: left;
+    }
+    .nav-link-side.active {
+      background: linear-gradient(to right, #38bdf8, #6366f1);
+      color: #0b1020;
+      font-weight: 600;
+    }
+    .nav-link-side:hover {
+      background: rgba(148,163,184,0.18);
+      text-decoration: none;
+      color: #f9fafb;
+    }
+    .side-footer { margin-top: auto; }
+    .main { flex: 1; padding: 1.8rem 2rem; }
+    .dash-card {
+      background: rgba(15,23,42,0.96);
+      border-radius: 1.2rem;
+      padding: 1.6rem 1.7rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid rgba(56,189,248,0.45);
+      box-shadow: 0 20px 35px rgba(15,23,42,0.8);
+    }
+  </style>
+</head>
+
+<body class="faculty-theme">
+<div class="layout">
+  <aside class="sidebar">
+    <div>
+      <div class="side-title mb-1">
+        <span>F</span> <div>Faculty Portal</div>
+      </div>
+      <div class="small text-muted">Attendance centre.</div>
+    </div>
+
+    <nav>
+      <a href="faculty_dashboard.html" class="nav-link-side">🏠 Overview</a>
+      <a href="faculty_attendance.html" class="nav-link-side active">📋 Attendance</a>
+      <a href="faculty_marks.html" class="nav-link-side">🧮 Marks & Grades</a>
+      <a href="faculty_events.html" class="nav-link-side">🗓 Events & Calendar</a>
+      <a href="faculty_projects.html" class="nav-link-side">📌 Projects</a>
+      <a href="faculty_feedback.html" class="nav-link-side">💬 Feedback</a>
+      <a href="faculty_student_view.html" class="nav-link-side">🔍 Student Lookup</a>
+    </nav>
+
+    <div class="side-footer">
+      <button class="nav-link-side" onclick="openChat()">💬 Chat</button>
+      <button class="nav-link-side" onclick="logout()">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="dash-card mb-4">
+      <h4 class="mb-1">Attendance</h4>
+      <div class="small text-secondary">
+        Mark Present / Absent for each enrolled student and save to database.
+      </div>
+    </div>
+
+    <div class="dash-card">
+      <div class="row mb-3">
+        <div class="col-md-4 mb-2">
+          <label class="form-label small">Date</label>
+          <input id="attDate" type="date" class="form-control form-control-sm" />
+        </div>
+        <div class="col-md-8 mb-2">
+          <label class="form-label small">Subject</label>
+          <select id="attSubjectSelect" class="form-select form-select-sm mb-1"></select>
+          <input id="attSubjectManual" class="form-control form-control-sm"
+                 placeholder="Or manual subject code">
+        </div>
+      </div>
+
+      <div class="small text-secondary mb-2">
+        Choose Present / Absent for each student.
+      </div>
+
+      <div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
+        <table class="table table-sm table-dark mb-2">
+          <thead>
+          <tr>
+            <th>Student</th>
+            <th>Status</th>
+          </tr>
+          </thead>
+          <tbody id="attTableBody"></tbody>
+        </table>
+      </div>
+
+      <button class="btn btn-outline-success btn-sm mt-2" onclick="saveAttendance()">
+        Save Attendance
+      </button>
+    </div>
+  </main>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+  // ========= FACULTY ATTENDANCE PAGE =========
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const auth = requireAuth("faculty"); // from app.js
+    if (!auth) return;
+
+    populateSubjectDropdown();
+    initAttendanceTable();
+  });
+
+  function logout() {
+    localStorage.removeItem(STORAGE_AUTH_KEY);
+    window.location.href = "index.html";
+  }
+
+  function openChat() {
+    window.location.href = "chat.html";
+  }
+
+  // ----- Subjects dropdown -----
+  function populateSubjectDropdown() {
+    const sel = document.getElementById("attSubjectSelect");
+    if (!sel) return;
+
+    sel.innerHTML = `<option value="">-- Select subject --</option>`;
+    SUBJECTS.forEach((s) => {
+      const opt = document.createElement("option");
+      opt.value = s.code;
+      opt.textContent = `${s.code} - ${s.name}`;
+      sel.appendChild(opt);
+    });
+  }
+
+  // ----- Attendance table (uses getKnownUsers from app.js) -----
+  function initAttendanceTable() {
+    const tbody = document.getElementById("attTableBody");
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+
+    // All users stored in localStorage, filter only students
+    const users = (getKnownUsers() || []).filter((u) => u.role === "student");
+
+    if (!users.length) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="2" class="small text-secondary">
+        No students found. Ask students to create accounts & login once.
+      </td>`;
+      tbody.appendChild(tr);
+      return;
+    }
+
+    users.forEach((u) => {
+      const email = u.email;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${u.name || u.email}</td>
+        <td>
+          <div class="d-flex gap-2">
+            <div class="form-check form-check-inline">
+              <input class="form-check-input att-status" type="radio"
+                     name="att-${email}" data-email="${email}"
+                     value="present" checked>
+              <label class="form-check-label small">Present</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input att-status" type="radio"
+                     name="att-${email}" data-email="${email}"
+                     value="absent">
+              <label class="form-check-label small">Absent</label>
+            </div>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ----- Save attendance to backend -----
+  async function saveAttendance() {
+    const dateEl = document.getElementById("attDate");
+    const selectVal = document.getElementById("attSubjectSelect").value;
+    const manual = document.getElementById("attSubjectManual").value.trim();
+    const subject = manual || selectVal;
+
+    const date = dateEl ? dateEl.value : "";
+
+    if (!date || !subject) {
+      alert("Please select date and subject for attendance.");
+      return;
+    }
+
+    const checked = Array.from(
+      document.querySelectorAll(".att-status:checked")
+    );
+    const entries = checked.map((r) => ({
+      email: r.dataset.email,
+      present: r.value === "present",
+    }));
+
+    if (!entries.length) {
+      alert("No students in attendance list.");
+      return;
+    }
+
+    try {
+      const res = await fetch(API_BASE + "/attendance", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(), // from app.js
+        },
+        body: JSON.stringify({ date, subject, entries }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert("Error saving attendance: " + (data.error || res.status));
+        return;
+      }
+
+      alert("Attendance saved to database.");
+    } catch (err) {
+      console.error(err);
+      alert("Network error saving attendance: " + err.message);
+    }
+  }
+</script>
+</body>
+</html>

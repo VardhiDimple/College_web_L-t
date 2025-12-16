@@ -1,6 +1,9 @@
 require("dotenv").config();
 const attendanceRoutes = require("./routes/attendance");
 const marksRoutes = require("./routes/Mark");
+const authRoutes = require("./routes/auth");
+const studentRoutes = require("./routes/student");
+const facultyRoutes = require("./routes/faculty");
 
 const express = require("express");
 const mongoose = require("mongoose");
@@ -24,6 +27,8 @@ app.use("/api/projects", require("./routes/projects"));
 app.use("/api/events", require("./routes/events"));
 app.use("/api/finance", require("./routes/finance"));
 app.use("/api/grades", require("./routes/grades"));
+app.use("/api/infra", require("./routes/infra"));
+
 
 // Simple health check
 app.get("/", (req, res) => {

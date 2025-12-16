@@ -441,7 +441,13 @@
 }
 
   // ------- Marks from faculty -------
-  async function initMarks(auth) {
+  // helper: convert subject code → "code - name"
+function subjectLabel(code) {
+  const match = SUBJECTS.find((s) => s.code === code);
+  return match ? `${code} - ${match.name}` : code;
+}
+
+async function initMarks(auth) {
   const tbody = document.getElementById("marksTable");
   tbody.innerHTML = "";
 
@@ -466,7 +472,7 @@
     data.forEach((r) => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${r.subject}</td>
+        <td>${subjectLabel(r.subject)}</td>
         <td>${r.marks}</td>
         <td>${r.maxMarks}</td>
         <td>${r.grade}</td>
@@ -478,6 +484,7 @@
     tbody.innerHTML = `<tr><td colspan="4" class="small text-danger">Error: ${err.message}</td></tr>`;
   }
 }
+
 
   // ------- Projects -------
   function getProjects() {

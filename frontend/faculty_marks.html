@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Faculty – Marks & Grades</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <style>
+    body {
+      background: radial-gradient(circle at top, #0ea5e9 0, #1d4ed8 45%, #020617 100%);
+      min-height: 100vh;
+      color: #f9fafb;
+    }
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 260px;
+      background: radial-gradient(circle at top left, #1d4ed8 0, #020617 55%);
+      padding: 1.5rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .side-title {
+      font-weight: 600;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .side-title span {
+      background: #38bdf8;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #020617;
+    }
+    .nav-link-side {
+      border-radius: 999px;
+      padding: 0.6rem 0.9rem;
+      margin-bottom: 0.25rem;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      color: #e5e7eb;
+      text-decoration: none;
+      background: transparent;
+      border: none;
+      width: 100%;
+      text-align: left;
+    }
+    .nav-link-side.active {
+      background: linear-gradient(to right, #38bdf8, #6366f1);
+      color: #0b1020;
+      font-weight: 600;
+    }
+    .nav-link-side:hover {
+      background: rgba(148,163,184,0.18);
+      text-decoration: none;
+      color: #f9fafb;
+    }
+    .side-footer { margin-top: auto; }
+    .main { flex: 1; padding: 1.8rem 2rem; }
+    .dash-card {
+      background: rgba(15,23,42,0.96);
+      border-radius: 1.2rem;
+      padding: 1.6rem 1.7rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid rgba(56,189,248,0.45);
+      box-shadow: 0 20px 35px rgba(15,23,42,0.8);
+    }
+  </style>
+</head>
+<body class="faculty-theme">
+<div class="layout">
+  <aside class="sidebar">
+    <div>
+      <div class="side-title mb-1">
+        <span>F</span> <div>Faculty Portal</div>
+      </div>
+      <div class="small text-muted">Marks & grade entry.</div>
+    </div>
+
+
+    <nav>
+      <a href="faculty_dashboard.html" class="nav-link-side">🏠 Overview</a>
+      <a href="faculty_attendance.html" class="nav-link-side">📋 Attendance</a>
+      <a href="faculty_marks.html" class="nav-link-side active">🧮 Marks & Grades</a>
+      <a href="faculty_events.html" class="nav-link-side">🗓 Events & Calendar</a>
+      <a href="faculty_projects.html" class="nav-link-side">📌 Projects</a>
+      <a href="faculty_feedback.html" class="nav-link-side">💬 Feedback</a>
+      <a href="faculty_student_view.html" class="nav-link-side">🔍 Student Lookup</a>
+    </nav>
+
+    <div class="side-footer">
+      <button class="nav-link-side" onclick="openChat()">💬 Chat</button>
+      <button class="nav-link-side" onclick="logout()">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="dash-card mb-4">
+      <h4 class="mb-1">Marks & Grades</h4>
+      <div class="small text-secondary">
+        Enter marks for each student. Grades will be calculated automatically and
+        visible in the student portal.
+      </div>
+    </div>
+
+    <div class="dash-card">
+      <div class="row mb-3">
+        <div class="col-md-6 mb-2">
+          <label class="form-label small">Subject</label>
+          <select id="markSubjectSelect" class="form-select form-select-sm mb-1"></select>
+          <input id="markSubjectManual" class="form-control form-control-sm"
+                 placeholder="Or manual subject code">
+        </div>
+        <div class="col-md-3 mb-2">
+          <label class="form-label small">Max Marks</label>
+          <input id="markMax" type="number" class="form-control form-control-sm"
+                 value="100" min="1">
+        </div>
+        <div class="col-md-3 mb-2 d-flex align-items-end gap-2">
+          <button class="btn btn-outline-secondary btn-sm"
+                  onclick="loadMarksForSubject()">Load Saved</button>
+          <button class="btn btn-outline-warning btn-sm"
+                  onclick="saveMarks()">Save</button>
+        </div>
+      </div>
+
+      <div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
+        <table class="table table-sm table-dark mb-2">
+          <thead>
+          <tr>
+            <th>Student</th>
+            <th>Marks</th>
+          </tr>
+          </thead>
+          <tbody id="marksTableBody"></tbody>
+        </table>
+      </div>
+
+      <div id="marksSummary" class="small text-secondary mt-2">
+        No marks saved yet.
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const auth = requireAuth("faculty");
+    if (!auth) return;
+    populateSubjectDropdowns();
+    initMarksTable();
+  });
+
+  function logout() {
+    localStorage.removeItem(STORAGE_AUTH_KEY);
+    window.location.href = "index.html";
+  }
+  function openChat() {
+    window.location.href = "chat.html";
+  }
+
+  function populateSubjectDropdowns() {
+    const sel = document.getElementById("markSubjectSelect");
+    sel.innerHTML = `<option value="">-- Select subject --</option>`;
+    SUBJECTS.forEach(s => {
+      const opt = document.createElement("option");
+      opt.value = s.code;
+      opt.textContent = `${s.code} - ${s.name}`;
+      sel.appendChild(opt);
+    });
+  }
+
+  function initMarksTable() {
+    const tbody = document.getElementById("marksTableBody");
+    tbody.innerHTML = "";
+    const users = getKnownUsers().filter(u => u.role === "student");
+    if (!users.length) {
+      const tr = document.createElement("tr");
+      tr.innerHTML =
+        `<td colspan="2" class="small text-secondary">No students logged in yet.</td>`;
+      tbody.appendChild(tr);
+      return;
+    }
+    users.forEach(u => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${u.name || u.email}</td>
+        <td>
+          <input
+            type="number"
+            class="form-control form-control-sm mark-input"
+            data-email="${u.email}"
+            min="0"
+            oninput="validateMarks(this)"
+          >
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function validateMarks(input) {
+    const value = Number(input.value);
+    if (value < 0) {
+      alert("Marks cannot be negative.");
+      input.value = "";
+      input.focus();
+    }
+  }
+
+  async function saveMarks() {
+    const selectVal = document.getElementById("markSubjectSelect").value;
+    const manual = document.getElementById("markSubjectManual").value.trim();
+    const subject = manual || selectVal;
+    const maxMarks = Number(document.getElementById("markMax").value) || 100;
+
+    if (!subject) {
+      alert("Please select or enter a subject for marks.");
+      return;
+    }
+
+    const inputs = Array.from(document.querySelectorAll(".mark-input"));
+    const entries = inputs
+      .map(inp => {
+        const email = inp.dataset.email;
+        const val = inp.value;
+        if (!val) return null;
+        const marks = Number(val);
+        if (isNaN(marks)) return null;
+        const grade = gradeFromMarks(marks, maxMarks);
+        return { email, marks, grade };
+      })
+      .filter(e => e !== null);
+
+    if (!entries.length) {
+      alert("Please enter at least one marks value.");
+      return;
+    }
+
+    try {
+      const res = await fetch(API_BASE + "/marks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify({ subject, maxMarks, entries })
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert("Error saving marks: " + (data.error || res.status));
+        return;
+      }
+
+      document.getElementById("marksSummary").innerHTML = `
+        <div class="mb-1">Saved marks for subject: <strong>${subject}</strong></div>
+        <div class="small">
+          Marks for ${entries.length} students stored in database. Grades auto-calculated.
+        </div>
+      `;
+
+      alert("Marks & grades saved to database.");
+    } catch (err) {
+      console.error(err);
+      alert("Network error saving marks: " + err.message);
+    }
+  }
+
+  async function loadMarksForSubject() {
+    const selectVal = document.getElementById("markSubjectSelect").value;
+    const manual = document.getElementById("markSubjectManual").value.trim();
+    const subject = manual || selectVal;
+
+    if (!subject) {
+      alert("Select or enter a subject to load marks.");
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        API_BASE + "/marks/subject/" + encodeURIComponent(subject),
+        { headers: { ...getAuthHeaders() } }
+      );
+
+      const data = await res.json();
+      if (!res.ok) {
+        alert("Error fetching marks for subject.");
+        return;
+      }
+
+      if (!data) {
+        alert("No saved marks found for this subject.");
+        return;
+      }
+
+      document.getElementById("markMax").value = data.maxMarks || 100;
+
+      const inputs = Array.from(document.querySelectorAll(".mark-input"));
+      inputs.forEach(inp => {
+        const email = inp.dataset.email;
+        const entry = (data.entries || []).find(e => e.studentEmail === email);
+        inp.value = entry ? entry.marks : "";
+      });
+
+      document.getElementById("marksSummary").innerHTML = `
+        <div class="mb-1">Loaded saved marks for: <strong>${subject}</strong></div>
+        <div class="small text-secondary">
+          You can edit the marks and click "Save" to update in DB.
+        </div>
+      `;
+    } catch (err) {
+      console.error(err);
+      alert("Network error loading marks: " + err.message);
+    }
+  }
+</script>
+</body>
+</html>

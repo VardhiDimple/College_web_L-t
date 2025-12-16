@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Portal Chat</title>
+  <meta charset="UTF-8" />
+  <title>College Portal – Chat</title>
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
     rel="stylesheet"
@@ -10,335 +10,845 @@
   <link rel="stylesheet" href="assets/styles.css" />
   <style>
     body {
-      background: #020617;
-      color: #e5e7eb;
+      background: radial-gradient(circle at top, #4c1d95 0, #020617 55%, #000 100%);
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+      margin: 0;
+      color: #e5e7eb;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
-    .chat-wrapper {
-      flex: 1;
-      max-width: 1000px;
-      margin: 1.5rem auto;
-      background: #020617;
-      border-radius: 1rem;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+
+    .chat-shell {
+      max-width: 1100px;
+      margin: 2.5rem auto;
+      background: rgba(15, 23, 42, 0.96);
+      border-radius: 1.25rem;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
       overflow: hidden;
-      display: flex;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: 520px;
+      position: relative;
     }
+
     .chat-sidebar {
-      width: 280px;
-      background: #020617;
-      border-right: 1px solid #111827;
+      border-right: 1px solid rgba(148, 163, 184, 0.3);
       padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
+      background: radial-gradient(circle at top left, #7c3aed33, transparent 60%);
     }
+
     .chat-main {
-      flex: 1;
+      padding: 1rem 1.25rem;
       display: flex;
       flex-direction: column;
-      background: radial-gradient(circle at top, #1d4ed8 0, #020617 60%);
+      height: 100%;
     }
-    .chat-messages {
-      flex: 1;
-      padding: 1rem;
-      overflow-y: auto;
-    }
-    .chat-input {
-      padding: 0.75rem;
-      border-top: 1px solid #111827;
-      background: rgba(15,23,42,0.95);
-    }
-    .msg-bubble {
-      margin-bottom: 0.5rem;
-      max-width: 70%;
-      padding: 0.5rem 0.75rem;
-      border-radius: 0.75rem;
-      font-size: 0.9rem;
-    }
-    .msg-me {
-      background: #22c55e;
-      color: #022c22;
-      margin-left: auto;
-      border-bottom-right-radius: 0.2rem;
-    }
-    .msg-other {
-      background: #0f172a;
-      border-bottom-left-radius: 0.2rem;
-    }
-    .sidebar-section-title {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #9ca3af;
-      margin-top: 0.5rem;
-    }
-    .user-pill {
+
+    .pill-toggle {
+      display: inline-flex;
+      background: rgba(15,23,42,0.9);
       border-radius: 999px;
-      padding: 0.3rem 0.6rem;
-      font-size: 0.8rem;
+      padding: 4px;
+    }
+    .pill-toggle button {
+      border: none;
+      background: transparent;
+      color: #e5e7eb;
+      padding: 4px 14px;
+      border-radius: 999px;
+      font-size: 0.82rem;
       cursor: pointer;
-      border: 1px solid #1f2937;
-      margin-bottom: 0.25rem;
+    }
+    .pill-toggle button.active {
+      background: linear-gradient(135deg, #a855f7, #6366f1);
+      color: white;
+      box-shadow: 0 0 12px rgba(129,140,248,0.4);
+    }
+
+    .chat-user-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0.6rem;
+      border-radius: 0.6rem;
+      cursor: pointer;
+      margin-bottom: 0.35rem;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .chat-user-pill:hover {
+      background: rgba(148, 163, 184, 0.15);
+      transform: translateY(-1px);
+    }
+    .chat-user-pill.active {
+      background: rgba(129, 140, 248, 0.35);
+    }
+
+    .chat-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #a855f7, #6366f1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .chat-header {
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+      margin-bottom: 0.75rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .user-pill:hover {
-      background: #111827;
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 0.25rem;
+      padding-bottom: 0.5rem;
     }
-    .user-pill.active {
-      background: #22c55e;
+
+    .chat-bubble {
+      max-width: 70%;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.85rem;
+      margin-bottom: 0.35rem;
+      font-size: 0.9rem;
+      line-height: 1.3;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+    .chat-bubble.me {
+      margin-left: auto;
+      background: linear-gradient(135deg, #22c55e, #4ade80);
       color: #022c22;
-      border-color: #22c55e;
+      border-bottom-right-radius: 0.25rem;
+    }
+    .chat-bubble.them {
+      margin-right: auto;
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      border-bottom-left-radius: 0.25rem;
+    }
+
+    .chat-meta {
+      font-size: 0.7rem;
+      color: #9ca3af;
+      margin-top: 0.1rem;
+    }
+
+    .chat-input-row {
+      border-top: 1px solid rgba(148, 163, 184, 0.3);
+      padding-top: 0.5rem;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .chat-input-row textarea {
+      resize: none;
+      max-height: 80px;
+    }
+
+    .logout-top-right {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      z-index: 999;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .logout-top-right button {
+      border: none;
+      padding: 7px 16px;
+      border-radius: 6px;
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    }
+    .btn-logout {
+      background: #dc3545;
+    }
+    .btn-back {
+      background: #0ea5e9;
+    }
+
+    @media (max-width: 900px) {
+      .chat-shell {
+        grid-template-columns: 1fr;
+      }
+      .chat-sidebar {
+        display: none;
+      }
     }
   </style>
 </head>
 <body>
-<div class="chat-wrapper">
-  <div class="chat-sidebar">
-    <h5 class="mb-2">💬 Portal Chat</h5>
-
-    <div class="small text-secondary mb-1">You</div>
-    <div class="small mb-2">
-      <div><span class="text-secondary">Name:</span> <span id="chatUser"></span></div>
-      <div><span class="text-secondary">Role:</span> <span id="chatRole"></span></div>
+  <div class="chat-shell mt-5">
+    <!-- top right buttons -->
+    <div class="logout-top-right">
+      <button class="btn-back" onclick="goBackDashboard()">Back</button>
+      <button class="btn-logout" onclick="logout()">Logout</button>
     </div>
 
-    <div class="sidebar-section-title">Rooms</div>
-    <div class="list-group list-group-flush mb-1">
-      <button class="list-group-item list-group-item-action small active"
-              id="room-general" onclick="switchRoom('general')">
-        # General Students
-      </button>
-      <button class="list-group-item list-group-item-action small"
-              id="room-faculty" onclick="switchRoom('faculty')">
-        # Faculty–Student
-      </button>
+    <!-- Sidebar -->
+    <div class="chat-sidebar">
+      <h5 class="mb-2">Chats</h5>
+
+      <!-- 🔴 this was missing before – JS needs it -->
+      <div id="currentUserLabel" class="small text-secondary mb-2"></div>
+
+      <!-- Direct / Channels pills -->
+      <div class="pill-toggle mb-3">
+        <button id="tabDirect" class="active" onclick="switchTab('direct')">Direct</button>
+        <button id="tabChannels" onclick="switchTab('channels')">Channels</button>
+      </div>
+
+      <!-- List of users or channels -->
+      <div id="sidebarList"></div>
+
+      <!-- Only visible on Channels tab -->
+      <div id="channelControls" class="mt-3 small d-none">
+        <button class="btn btn-sm btn-outline-light w-100" onclick="createChannel()">
+          + Create channel
+        </button>
+      </div>
     </div>
 
-    <div class="sidebar-section-title">Students</div>
-    <div id="studentList"></div>
+    <!-- Main chat area -->
+    <div class="chat-main">
+      <div class="chat-header">
+  <div>
+    <div class="small text-secondary">Chatting in</div>
+    <div id="chatPartnerName" class="fw-semibold">Select user / channel</div>
+  </div>
+  <button id="editMembersBtn" class="btn btn-outline-light btn-sm d-none" onclick="openMemberEditModal()">
+    <button
+    id="editMembersBtn"
+    class="btn btn-outline-light btn-sm d-none"
+    onclick="openMemberEditModal()"
+  >
+    Edit Members
+  </button>
+</div>
 
-    <div class="sidebar-section-title">Faculty</div>
-    <div id="facultyList"></div>
+      <div id="chatMessages" class="chat-messages">
+        <div class="text-secondary small">
+          Select a user (Direct) or a channel to start chatting.
+        </div>
+      </div>
 
-    <button class="btn btn-outline-light btn-sm mt-3" onclick="goBack()">Back to Portal</button>
+      <div class="chat-input-row">
+        <textarea
+          id="chatInput"
+          class="form-control form-control-sm"
+          rows="1"
+          placeholder="Type a message and press Enter or click Send..."
+        ></textarea>
+        <button id="sendBtn" class="btn btn-primary btn-sm">
+          Send
+        </button>
+      </div>
+    </div>
   </div>
 
-  <div class="chat-main">
-    <div class="p-2 border-bottom border-dark">
-      <strong id="roomTitle"># General Students</strong>
-      <div id="roomSubtitle" class="small text-secondary"></div>
-    </div>
-    <div id="messages" class="chat-messages"></div>
-    <div class="chat-input">
-      <form class="d-flex gap-2" onsubmit="return sendMessage(event)">
-        <input id="msgInput" class="form-control form-control-sm" placeholder="Type a message..." autocomplete="off" />
-        <button class="btn btn-success btn-sm" type="submit">Send</button>
-      </form>
+  <!-- shared helpers (requireAuth, getKnownUsers, logout, etc.) -->
+  <script src="assets/app.js"></script>
+
+  <script>
+    // ===== LocalStorage keys =====
+    const DIRECT_MSG_KEY   = "portal_chat_direct";
+    const CHANNELS_KEY     = "portal_chat_channels";
+    const CHANNEL_MSG_KEY  = "portal_chat_channel_msgs";
+    const CHAT_LAST_SEEN_KEY = "portal_chat_last_seen";
+
+    // ===== Helpers for storage =====
+    function getJson(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch {
+        return fallback;
+      }
+    }
+    function setJson(key, value) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+
+    // direct messages: {id, from, to, text, ts}
+    function getDirectMessages() {
+      return getJson(DIRECT_MSG_KEY, []);
+    }
+    function saveDirectMessages(list) {
+      setJson(DIRECT_MSG_KEY, list);
+    }
+    function addDirectMessage(from, to, text) {
+      const list = getDirectMessages();
+      list.push({ id: Date.now(), from, to, text, ts: new Date().toISOString() });
+      saveDirectMessages(list);
+    }
+
+    // channels: {id, name, createdBy, members:[emails]}
+    function getChannels() {
+      return getJson(CHANNELS_KEY, []);
+    }
+    function saveChannels(list) {
+      setJson(CHANNELS_KEY, list);
+    }
+
+    // channel messages: {id, channelId, from, text, ts}
+    function getChannelMessages() {
+      return getJson(CHANNEL_MSG_KEY, []);
+    }
+    function saveChannelMessages(list) {
+      setJson(CHANNEL_MSG_KEY, list);
+    }
+    function addChannelMessage(channelId, from, text) {
+      const list = getChannelMessages();
+      list.push({ id: Date.now(), channelId, from, text, ts: new Date().toISOString() });
+      saveChannelMessages(list);
+    }
+
+    function getLastSeenMap() {
+      return getJson(CHAT_LAST_SEEN_KEY, {});
+    }
+    function saveLastSeenMap(map) {
+      setJson(CHAT_LAST_SEEN_KEY, map);
+    }
+
+    // ===== Page state =====
+    let auth = null;
+    let activeTab = "direct";  // 'direct' | 'channels'
+    let selectedUser = null;   // for direct
+    let selectedChannel = null; // for channels
+
+    document.addEventListener("DOMContentLoaded", () => {
+      auth = requireAuth(); // any logged-in user
+      if (!auth) return;
+
+      initCurrentUserLabel();
+      switchTab("direct");      // initial tab
+      initSendHandlers();
+      showUnreadPopup();
+    });
+
+    function initCurrentUserLabel() {
+      const el = document.getElementById("currentUserLabel");
+      if (!el) return; // safety
+      el.textContent =
+        "You: " + (auth.name || auth.email) + " (" + auth.role + ")";
+    }
+
+    function initialsFromName(name, email) {
+      const source = name || email || "";
+      const parts = source.trim().split(" ");
+      if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+      return source.slice(0, 2).toUpperCase();
+    }
+
+    // ===== Tabs =====
+    function switchTab(tab) {
+      activeTab = tab;
+
+      document.getElementById("tabDirect").classList.toggle("active", tab === "direct");
+      document.getElementById("tabChannels").classList.toggle("active", tab === "channels");
+
+      // channel controls visible only on channels tab
+      document.getElementById("channelControls").classList.toggle("d-none", tab !== "channels");
+
+      // reset selection when switching tabs
+      if (tab === "direct") {
+        selectedChannel = null;
+        document.getElementById("chatPartnerName").textContent = "Select a user";
+      } else {
+        selectedUser = null;
+        document.getElementById("chatPartnerName").textContent = "Select a channel";
+      }
+
+      renderSidebar();
+      renderMessages();
+    }
+
+    function renderSidebar() {
+      const cont = document.getElementById("sidebarList");
+      cont.innerHTML = "";
+
+      if (activeTab === "direct") {
+        renderDirectSidebar(cont);
+      } else {
+        renderChannelsSidebar(cont);
+      }
+    }
+
+    function renderDirectSidebar(cont) {
+      const allUsers = getKnownUsers() || [];
+      const others = allUsers.filter((u) => u.email !== auth.email);
+
+      if (!others.length) {
+        cont.innerHTML = `
+          <div class="small text-secondary mb-2">
+            No other users found on this browser.
+          </div>
+          <div class="small text-secondary">
+            ➤ Create at least <strong>one more account</strong> (student/faculty),<br/>
+            ➤ Login with it once,<br/>
+            ➤ Then open Chat again.
+          </div>
+        `;
+        return;
+      }
+
+      others.forEach((u) => {
+        const div = document.createElement("div");
+        div.className = "chat-user-pill";
+        div.dataset.email = u.email;
+        div.innerHTML = `
+          <div class="chat-avatar">
+            ${initialsFromName(u.name, u.email)}
+          </div>
+          <div>
+            <div class="fw-semibold">${u.name || u.email}</div>
+            <div class="small text-secondary">${u.role}</div>
+          </div>
+        `;
+        if (selectedUser && selectedUser.email === u.email) {
+          div.classList.add("active");
+        }
+        div.addEventListener("click", () => {
+          selectedUser = u;
+          document.getElementById("chatPartnerName").textContent = u.name || u.email;
+          renderSidebar();
+          renderMessages();
+          markConversationSeen(u.email);
+        });
+        cont.appendChild(div);
+      });
+    }
+
+   function renderChannelsSidebar(cont) {
+  cont.innerHTML = "";
+
+  const channels = getChannels() || [];
+  const myChannels = channels.filter(
+    (ch) => Array.isArray(ch.members) && ch.members.includes(auth.email)
+  );
+
+  if (!myChannels.length) {
+    cont.innerHTML = `
+      <div class="small text-secondary">
+        No channels yet. Click "Create channel".
+      </div>
+    `;
+    return;
+  }
+
+  myChannels.forEach((ch) => {
+    const div = document.createElement("div");
+    const isActive = selectedChannel && selectedChannel.id === ch.id;
+
+    div.className = "chat-user-pill" + (isActive ? " active" : "");
+    div.dataset.id = ch.id;
+
+    div.innerHTML = `
+      <div class="chat-avatar">#</div>
+      <div>
+        <div class="fw-semibold">${ch.name}</div>
+        <div class="small text-secondary">
+          ${ch.members.length} member${ch.members.length > 1 ? "s" : ""}
+        </div>
+      </div>
+    `;
+
+    div.addEventListener("click", () => {
+      selectedChannel = ch;
+      selectedUser = null; // we’re in channel mode now
+      document.getElementById("chatPartnerName").textContent = "#" + ch.name;
+      renderSidebar();      // rebuild sidebar so active highlight updates
+      renderMessages();     // show channel messages
+      markChannelSeen(ch.id);
+    });
+
+    cont.appendChild(div);
+  });
+}
+
+
+
+    function createChannel() {
+  // show modal
+  document.getElementById("channelModal").classList.remove("d-none");
+
+  // reset fields
+  document.getElementById("channelNameInput").value = "";
+  const listBox = document.getElementById("channelUsersList");
+  listBox.innerHTML = "";
+
+  const all = getKnownUsers() || [];
+  const others = all.filter(u => u.email !== auth.email);
+
+  // current user is always member
+  const meLabel = `<div class="small text-success mb-1">You are auto-added.</div>`;
+  listBox.insertAdjacentHTML("beforeend", meLabel);
+
+  others.forEach(u => {
+    const id = "chk_" + u.email.replace(/[@.]/g, "");
+    listBox.insertAdjacentHTML(
+      "beforeend",
+      `
+      <label class="user-check-line">
+        <input type="checkbox" id="${id}" data-email="${u.email}">
+        <div>
+          <div class="fw-semibold">${u.name || u.email}</div>
+          <div class="small text-secondary">${u.role}</div>
+        </div>
+      </label>
+      `
+    );
+  });
+}
+function closeChannelModal() {
+  document.getElementById("channelModal").classList.add("d-none");
+}
+
+function finishChannelCreate() {
+  const name = document.getElementById("channelNameInput").value.trim();
+  if (!name) {
+    alert("Enter channel name");
+    return;
+  }
+
+  const chList = getChannels();
+  if (chList.some(ch => ch.name.toLowerCase() === name.toLowerCase())) {
+    alert("Channel name already exists");
+    return;
+  }
+
+  let members = [auth.email];
+  document.querySelectorAll("#channelUsersList input[type=checkbox]:checked")
+    .forEach(chk => members.push(chk.dataset.email));
+
+  const newCh = {
+    id: Date.now(),
+    name,
+    createdBy: auth.email,
+    members
+  };
+
+  chList.push(newCh);
+  saveChannels(chList);
+  selectedChannel = newCh;
+
+  closeChannelModal();
+  switchTab("channels");
+  document.getElementById("chatPartnerName").textContent = "#" + newCh.name;
+  renderChannelsSidebar();
+  renderMessages();
+}
+
+
+
+    // ===== Messages render =====
+    function renderMessages() {
+      const cont = document.getElementById("chatMessages");
+      cont.innerHTML = "";
+
+      if (activeTab === "direct") {
+        if (!selectedUser) {
+          cont.innerHTML =
+            '<div class="text-secondary small">Select a user from the left to see messages.</div>';
+          return;
+        }
+        const all = getDirectMessages();
+        const relevant = all.filter(
+          (m) =>
+            (m.from === auth.email && m.to === selectedUser.email) ||
+            (m.to === auth.email && m.from === selectedUser.email)
+        );
+        if (!relevant.length) {
+          cont.innerHTML =
+            '<div class="text-secondary small">No messages yet. Start the conversation!</div>';
+          return;
+        }
+        relevant
+          .sort((a, b) => a.id - b.id)
+          .forEach((m) => {
+            const wrapper = document.createElement("div");
+            const isMe = m.from === auth.email;
+            wrapper.className =
+              "d-flex flex-column " +
+              (isMe ? "align-items-end" : "align-items-start");
+
+            const bubble = document.createElement("div");
+            bubble.className = "chat-bubble " + (isMe ? "me" : "them");
+            bubble.textContent = m.text;
+
+            const meta = document.createElement("div");
+            meta.className = "chat-meta";
+            const time = new Date(m.ts).toLocaleTimeString();
+            meta.textContent = (isMe ? "You" : selectedUser.name || selectedUser.email) + " • " + time;
+
+            wrapper.appendChild(bubble);
+            wrapper.appendChild(meta);
+            cont.appendChild(wrapper);
+          });
+      } else {
+        if (!selectedChannel) {
+          cont.innerHTML =
+            '<div class="text-secondary small">Select a channel or create one.</div>';
+          return;
+        }
+        const all = getChannelMessages();
+        const relevant = all.filter(m => m.channelId === selectedChannel.id);
+        if (!relevant.length) {
+          cont.innerHTML =
+            '<div class="text-secondary small">No messages yet in this channel.</div>';
+          return;
+        }
+        relevant
+          .sort((a, b) => a.id - b.id)
+          .forEach((m) => {
+            const wrapper = document.createElement("div");
+            const isMe = m.from === auth.email;
+            wrapper.className =
+              "d-flex flex-column " +
+              (isMe ? "align-items-end" : "align-items-start");
+
+            const bubble = document.createElement("div");
+            bubble.className = "chat-bubble " + (isMe ? "me" : "them");
+            bubble.textContent = m.text;
+
+            const meta = document.createElement("div");
+            meta.className = "chat-meta";
+            const time = new Date(m.ts).toLocaleTimeString();
+            meta.textContent = (isMe ? "You" : m.from) + " • " + time;
+
+            wrapper.appendChild(bubble);
+            wrapper.appendChild(meta);
+            cont.appendChild(wrapper);
+          });
+      }
+
+      cont.scrollTop = cont.scrollHeight;
+    }
+
+    // ===== Sending messages =====
+    function initSendHandlers() {
+      const input = document.getElementById("chatInput");
+      const btn = document.getElementById("sendBtn");
+
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+
+      btn.addEventListener("click", sendMessage);
+    }
+    // ===== Channel Member Editing =====
+function openMemberEditModal() {
+  if (!activeChannel) return;
+
+  const modal = document.getElementById("memberEditModal");
+  const list = document.getElementById("memberCheckboxList");
+
+  const users = getKnownUsers().filter(u => u.email !== auth.email);
+  list.innerHTML = "";
+
+  users.forEach(u => {
+    const checked = activeChannel.members.includes(u.email) ? "checked" : "";
+    list.innerHTML += `
+      <div class="form-check">
+        <input class="form-check-input memberCheck" type="checkbox" data-email="${u.email}" ${checked}>
+        <label class="form-check-label">${u.name || u.email}</label>
+      </div>
+    `;
+  });
+
+  modal.classList.remove("d-none");
+}
+
+function closeMemberEditModal() {
+  document.getElementById("memberEditModal").classList.add("d-none");
+}
+
+function saveMemberEdits() {
+  const checks = Array.from(document.querySelectorAll(".memberCheck"));
+  const selected = checks.filter(c => c.checked).map(c => c.dataset.email);
+
+  const channels = getAllChannels();
+  const idx = channels.findIndex(c => c.id === activeChannel.id);
+  if (idx !== -1) {
+    channels[idx].members = selected;
+    activeChannel = channels[idx];
+    saveAllChannels(channels);
+  }
+
+  closeMemberEditModal();
+  renderChannels();
+  alert("Channel members updated.");
+}
+
+
+    function sendMessage() {
+      const input = document.getElementById("chatInput");
+      const text = input.value.trim();
+      if (!text) return;
+
+      if (activeTab === "direct") {
+        if (!selectedUser) {
+          alert("Please select a user to chat with.");
+          return;
+        }
+        addDirectMessage(auth.email, selectedUser.email, text);
+        markConversationSeen(selectedUser.email);
+      } else {
+        if (!selectedChannel) {
+          alert("Please select or create a channel.");
+          return;
+        }
+        addChannelMessage(selectedChannel.id, auth.email, text);
+        markChannelSeen(selectedChannel.id);
+      }
+
+      input.value = "";
+      renderMessages();
+    }
+
+    // ===== Simple "unread" popup when opening chat =====
+    function showUnreadPopup() {
+      const map = getLastSeenMap();
+      const allDirect = getDirectMessages();
+      const allChan   = getChannelMessages();
+      const myKey = auth.email + "|overall";
+
+      const last = map[myKey] ? new Date(map[myKey]).getTime() : 0;
+
+      const newDirect = allDirect.filter(m => m.to === auth.email && new Date(m.ts).getTime() > last);
+      const channels = getChannels().filter(ch => ch.members.includes(auth.email));
+      const myChannelIds = new Set(channels.map(ch => ch.id));
+      const newChan = allChan.filter(m =>
+        myChannelIds.has(m.channelId) && m.from !== auth.email && new Date(m.ts).getTime() > last
+      );
+
+      const total = newDirect.length + newChan.length;
+      if (total > 0) {
+        alert("You have " + total + " unread message(s) in your chats.");
+      }
+
+      map[myKey] = new Date().toISOString();
+      saveLastSeenMap(map);
+    }
+
+    function markConversationSeen(otherEmail) {
+      const map = getLastSeenMap();
+      const key = auth.email + "|dm|" + otherEmail;
+      map[key] = new Date().toISOString();
+      saveLastSeenMap(map);
+    }
+
+    function markChannelSeen(channelId) {
+      const map = getLastSeenMap();
+      const key = auth.email + "|ch|" + channelId;
+      map[key] = new Date().toISOString();
+      saveLastSeenMap(map);
+    }
+
+    function goBackDashboard() {
+      if (!auth) return;
+      if (auth.role === "faculty") {
+        window.location.href = "faculty_dashboard.html";
+      } else {
+        window.location.href = "student_dashboard.html";
+      }
+    }
+    
+  </script>
+  <!-- CHANNEL CREATE MODAL -->
+<!-- CHANNEL CREATE MODAL -->
+<div id="channelModal" class="modal-backdrop d-none">
+  ...
+</div>
+
+<!-- CHANNEL MEMBER EDIT MODAL -->
+<div id="memberEditModal" class="modal-backdrop d-none">
+  <div class="modal-card">
+    <h5 class="mb-2">Edit Channel Members</h5>
+    <div
+      id="memberCheckboxList"
+      style="max-height: 260px; overflow-y:auto;"
+      class="mb-3"
+    ></div>
+
+    <div class="d-flex justify-content-end gap-2">
+      <button
+        class="btn btn-sm btn-outline-secondary"
+        onclick="closeMemberEditModal()"
+      >
+        Cancel
+      </button>
+      <button
+        class="btn btn-sm btn-success"
+        onclick="saveMemberEdits()"
+      >
+        Save
+      </button>
     </div>
   </div>
 </div>
 
-<script src="assets/app.js"></script>
-<script>
-  const CHAT_KEY = "portal_chat_messages";
+</body>
+</html>
 
-  let auth;
-  let currentMode = "room"; // "room" | "dm"
-  let currentRoom = "general";
-  let currentDM = null; // { email, name, role }
 
-  document.addEventListener("DOMContentLoaded", () => {
-    auth = getAuth();
-    if (!auth) {
-      window.location.href = "index.html";
-      return;
-    }
-    document.getElementById("chatUser").textContent = auth.name || auth.email;
-    document.getElementById("chatRole").textContent = auth.role;
-
-    renderUserLists();
-    switchRoom("general");
-  });
-
-  function renderUserLists() {
-    const users = getKnownUsers();
-    const students = users.filter(u => u.role === "student" && u.email !== auth.email);
-    const faculty = users.filter(u => u.role === "faculty" && u.email !== auth.email);
-
-    const studentList = document.getElementById("studentList");
-    const facultyList = document.getElementById("facultyList");
-    studentList.innerHTML = "";
-    facultyList.innerHTML = "";
-
-    if (!students.length) {
-      studentList.innerHTML = `<div class="small text-secondary">No students yet.</div>`;
-    } else {
-      students.forEach(u => {
-        const div = document.createElement("div");
-        div.className = "user-pill";
-        div.dataset.email = u.email;
-        div.onclick = () => openDM(u);
-        div.innerHTML = `
-          <span>${u.name || u.email}</span>
-          <span class="text-secondary">@</span>
-        `;
-        studentList.appendChild(div);
-      });
+<style>
+      .chat-user-pill .fw-semibold,
+    .chat-user-pill .fw-semibold.text-light {
+      color: #f9fafb !important;  /* bright white */
     }
 
-    if (!faculty.length) {
-      facultyList.innerHTML = `<div class="small text-secondary">No faculty yet.</div>`;
-    } else {
-      faculty.forEach(u => {
-        const div = document.createElement("div");
-        div.className = "user-pill";
-        div.dataset.email = u.email;
-        div.onclick = () => openDM(u);
-        div.innerHTML = `
-          <span>${u.name || u.email}</span>
-          <span class="text-secondary">👩‍🏫</span>
-        `;
-        facultyList.appendChild(div);
-      });
-    }
+  .chat-user-pill .fw-semibold {
+  color: #f9fafb;  /* bright white text for names */
+}
+
+  .modal-backdrop {
+    background: rgba(0,0,0,0.6);
+    position: fixed; inset: 0;
+    display: flex; justify-content: center; align-items: center;
   }
-
-  function dmKey(aEmail, bEmail) {
-    return [aEmail, bEmail].sort().join("|");
+  .modal-card {
+    background: #0f172a;
+    color: white;
+    width: 380px;
+    padding: 1.25rem;
+    border-radius: 12px;
+    box-shadow: 0 0 25px rgba(0,0,0,0.45);
   }
-
-  function getAllMessages() {
-    try {
-      const raw = localStorage.getItem(CHAT_KEY);
-      if (!raw) return { general: [], faculty: [], dms: {} };
-      const parsed = JSON.parse(raw);
-      if (!parsed.dms) parsed.dms = {};
-      if (!parsed.general) parsed.general = [];
-      if (!parsed.faculty) parsed.faculty = [];
-      return parsed;
-    } catch {
-      return { general: [], faculty: [], dms: {} };
-    }
+  .user-select-box {
+    max-height: 230px;
+    overflow-y: auto;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    padding: .5rem;
   }
-
-  function saveAllMessages(data) {
-    localStorage.setItem(CHAT_KEY, JSON.stringify(data));
+  .user-check-line {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .35rem .25rem;
+    border-radius: 5px;
+    cursor: pointer;
   }
-
-  function switchRoom(room) {
-    currentMode = "room";
-    currentRoom = room;
-    currentDM = null;
-
-    document.getElementById("roomTitle").textContent =
-      room === "general" ? "# General Students" : "# Faculty–Student";
-    document.getElementById("roomSubtitle").textContent = "";
-
-    document.getElementById("room-general").classList.toggle("active", room === "general");
-    document.getElementById("room-faculty").classList.toggle("active", room === "faculty");
-
-    // remove active from DMs
-    document.querySelectorAll(".user-pill").forEach(p => p.classList.remove("active"));
-
-    loadMessages();
+  .user-check-line:hover {
+    background: rgba(255,255,255,0.08);
   }
+</style>
 
-  function openDM(user) {
-    currentMode = "dm";
-    currentDM = user;
-    document.getElementById("roomTitle").textContent = `DM with ${user.name || user.email}`;
-    document.getElementById("roomSubtitle").textContent = `${user.role?.toUpperCase() || ""}`;
-
-    document.getElementById("room-general").classList.remove("active");
-    document.getElementById("room-faculty").classList.remove("active");
-
-    document.querySelectorAll(".user-pill").forEach(p => {
-      p.classList.toggle("active", p.dataset.email === user.email);
-    });
-
-    loadMessages();
-  }
-
-  function loadMessages() {
-    const box = document.getElementById("messages");
-    box.innerHTML = "";
-    const all = getAllMessages();
-
-    let list;
-    if (currentMode === "room") {
-      list = all[currentRoom] || [];
-    } else {
-      const key = dmKey(auth.email, currentDM.email);
-      const dms = all.dms || {};
-      list = dms[key] || [];
-    }
-
-    list.forEach(m => {
-      const div = document.createElement("div");
-      const mine = m.email === auth.email;
-      div.className = "msg-bubble " + (mine ? "msg-me" : "msg-other");
-      div.innerHTML = `
-        <div class="small fw-semibold">${m.name} <span class="text-secondary">· ${m.role}</span></div>
-        <div>${m.text}</div>
-        <div class="small text-secondary text-end">
-          ${new Date(m.time).toLocaleTimeString()}
-        </div>
-      `;
-      box.appendChild(div);
-    });
-    box.scrollTop = box.scrollHeight;
-  }
-
-  function sendMessage(e) {
-    e.preventDefault();
-    const input = document.getElementById("msgInput");
-    const text = input.value.trim();
-    if (!text) return false;
-
-    const all = getAllMessages();
-    const baseMsg = {
-      text,
-      time: Date.now(),
-      email: auth.email,
-      name: auth.name || auth.email.split("@")[0],
-      role: auth.role
-    };
-
-    if (currentMode === "room") {
-      const arr = all[currentRoom] || [];
-      arr.push(baseMsg);
-      all[currentRoom] = arr;
-    } else {
-      if (!currentDM) return false;
-      const key = dmKey(auth.email, currentDM.email);
-      if (!all.dms) all.dms = {};
-      const arr = all.dms[key] || [];
-      arr.push({ ...baseMsg, to: currentDM.email });
-      all.dms[key] = arr;
-    }
-
-    saveAllMessages(all);
-    input.value = "";
-    loadMessages();
-    return false;
-  }
-
-  function goBack() {
-    if (!auth) {
-      window.location.href = "index.html";
-      return;
-    }
-    if (auth.role === "student") {
-      window.location.href = "student.html";
-    } else {
-      window.location.href = "faculty.html";
-    }
-  }
-</script>
 </body>
 </html>
